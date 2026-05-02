@@ -4,18 +4,11 @@ const char* default_dir = "/.meow";
 const char* objects_dir = "/objects";
 const char* meow_index = "/index";
 
-char is_path_absolute(char* path){
-    if (!path || path[0] == '\0') return 0;
-    if (path[0] == '/' || path[0] == '\\') return 1; // Unix
-    if (isalpha(path[0]) && path[1] == ':') return 1; // Windows
-    return 0;
-}
-
 char meow_init(){
-    char def_path[255];
-    char path[255];
+    char def_path[PATH_MAX];
+    char path[PATH_MAX];
 
-    getcwd(def_path, 100);
+    getcwd(def_path, PATH_MAX);
 
     strcat(def_path, default_dir);
     mkdir(def_path, 0777);
@@ -33,9 +26,31 @@ char meow_init(){
 }
 
 void meow_add(char* file){
-    char path[255];
+    char work_dir[PATH_MAX];
+    char work_obj_dir[PATH_MAX];
+    char path_to_tempfile[PATH_MAX];
+    char path_to_index[PATH_MAX];
+    char path_to_blob_dir[PATH_MAX];
+    char path_to_blob[PATH_MAX];
+    char path[PATH_MAX];
+
+    find_work_dir(work_dir);
+
+    strcpy(work_obj_dir, work_dir);
+    strcat(work_obj_dir, objects_dir);
+
+    strcpy(path_to_tempfile, work_obj_dir);
+    strcat(path_to_tempfile, "/tempfile");
+
+
+    strcpy(path_to_blob_dir, work_obj_dir);
+
+
+    strcpy(path_to_index, work_dir);
+    strcat(path_to_index, "/index");
+
     if (!is_path_absolute(file)) {
-        getcwd(path, 100);
+        getcwd(path, PATH_MAX);
         strcat(path, "/");
         strcat(path, file);
     } else {
@@ -43,30 +58,67 @@ void meow_add(char* file){
     }
 
     struct stat st;
-    if (stat(path, &st) != 0) return;
+    if (stat(path, &st) != 0) {
+        puts("Err: file doesn`t exists");
+        return;
+    }
 
     SHA1_CTX sha;
     SHA1Init(&sha);
 
-    char header[64];
-    int h_len = snprintf(header, sizeof(header), "blob %ld", st.st_size);
-    h_len++;
-
-    printf("%s\n", header);
+    FILE* f = fopen(path, "rb");
+    FILE* tempfile = fopen(path_to_tempfile, "w+b");
+    FILE* index = fopen(path_to_index, "w+b");
 
     uint8_t results[CHUNK];
+    char read_buffer[CHUNK];
 
-    FILE* f = fopen(path, "rb");
+    // формируем хедер
+    char header[64];
+    uint32_t h_len = snprintf(header, sizeof(header), "blob %ld", st.st_size);
+    h_len++;
 
-    SHA1Update(&sha, (uint8_t *)header, h_len); // хешируем хедер блоба
+    SHA1Update(&sha, (uint8_t*)header, h_len); // хешируем хедер блоба
+    fwrite(header, sizeof(char), h_len, tempfile);
 
+    size_t bytes_read;
+    while((bytes_read = fread(read_buffer, sizeof(uint8_t), CHUNK, f)) > 0){
+        SHA1Update(&sha, (uint8_t*)read_buffer, bytes_read);
+        fwrite(read_buffer, sizeof(uint8_t), bytes_read, tempfile);
+    } 
     SHA1Final(results, &sha);
 
-    printf("0x"); 
-    for (int i = 0; i < 20; i++) printf("%02x", results[i]);
+    char blob_dir_name[3];
+    blob_dir_name[0] = '/';
+    snprintf(blob_dir_name+1, 3, "%02x", results[0]);
+    strcat(path_to_blob_dir, blob_dir_name);
+    mkdir(path_to_blob_dir, 0777);
 
+    char blob_file_name[512];
+    blob_file_name[0] = '/';
+    uint32_t offset = 1;
+    for (int i = 1; i < 20; i++){
+        offset += snprintf(blob_file_name + offset, sizeof(blob_file_name) - offset, "%02x", results[i]);
+    } 
+    strcpy(path_to_blob, path_to_blob_dir);
+    strcat(path_to_blob, blob_file_name);
+
+    printf("hash - 0x"); 
+    for (int i = 0; i < 20; i++) printf("%02x", results[i]);    
     putchar('\n');
+
+    FILE* blob = fopen(path_to_blob, "wb");
+    rewind(tempfile); // return cursor
+    def(tempfile, blob, Z_DEFAULT_COMPRESSION);
+
+    printf("%s\n", work_dir);
+    printf("%s\n", work_obj_dir);
+    printf("%s\n", path_to_tempfile);
+    printf("%s\n", path_to_blob);
     fclose(f);
+    fclose(tempfile);
+    fclose(blob);
+    fclose(index);
 }
 
 int main(int argc, char** argv){
