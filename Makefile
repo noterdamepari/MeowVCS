@@ -8,8 +8,8 @@ LIB := $(wildcard lib/*.a)
 build: $(OBJ)
 	$(CMP) $^ $(LIB) -o bin/meow
 
-build/%.o: $(SRC)
-	$(CMP) $(CFLAGS) -c $^ -I ./include -o $@
+build/%.o: src/%.c
+	$(CMP) $(CFLAGS) -c $< -I ./include -o $@
 
 clean: 
 	rm -f build/*
