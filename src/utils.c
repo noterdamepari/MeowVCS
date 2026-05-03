@@ -105,8 +105,6 @@ char add_to_indexfile(char* path, char* hash, char* work_dir){
     unsigned int entries_amt;
     fscanf(index, "%u\n", &entries_amt);
 
-    puts("1");
-
     indexEntry entry;
 
     char project_dir[PATH_MAX];
@@ -121,14 +119,17 @@ char add_to_indexfile(char* path, char* hash, char* work_dir){
         fscanf(index, "%40s %hhu %lld %s", entry.hash, &entry.status, &entry.mtime, entry.path);
         if (!strcmp(rel_path, entry.path)){ // already in index -> modified
             already_in_index = 1;
-            entry.status = 0;
-            strcpy(entry.hash, hash);
-            entry.mtime = file_mtime;
+            if (entry.mtime != file_mtime && !strcmp(entry.hash, hash)){ // nothing to do
+                entry.status = 0;
+                strcpy(entry.hash, hash);
+                entry.mtime = file_mtime;
+            } else {
+                puts("Nothing to do, already in index");
+            }
         }
         fprintf(index_tmp, "%s %hhu %lld %s\n", entry.hash, entry.status, entry.mtime, entry.path);
     }
 
-    puts("2");
     printf("%s\n", rel_path);
     if(!already_in_index){
         strcpy(entry.hash, hash);
@@ -137,17 +138,14 @@ char add_to_indexfile(char* path, char* hash, char* work_dir){
         entry.mtime = file_mtime;
         fprintf(index_tmp, "%s %hhu %lld %s\n", entry.hash, entry.status, entry.mtime, entry.path);
         entries_amt++;
-        puts("2.5");
     }
 
-    puts("3");
     rewind(index_tmp);
     fprintf(index_tmp, "%u\n", entries_amt);
  
     fclose(index_tmp);
     fclose(index);
 
-    puts("1");
     if (rename(path_to_indextmp, path_to_index) != 0) {
         perror("Err: rename failed");
         return -1;
