@@ -125,6 +125,7 @@ char add_to_indexfile(char* path, char* hash, char* work_dir){
                 entry.mtime = file_mtime;
             } else {
                 puts("Nothing to do, already in index");
+                return 1;
             }
         }
         fprintf(index_tmp, "%s %hhu %lld %s\n", entry.hash, entry.status, entry.mtime, entry.path);
