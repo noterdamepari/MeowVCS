@@ -85,6 +85,11 @@ void meow_add(char* file){
     } 
     SHA1Final(hash, &sha);
 
+
+    if (add_to_indexfile(path, hash, work_dir) != 0){
+        return;
+    } 
+
     char blob_dir_name[3];
     snprintf(blob_dir_name, 3, "%02x", hash[0]);
     snprintf(path_to_blob_dir, PATH_MAX, "%s/%s", work_obj_dir, blob_dir_name);
@@ -106,6 +111,7 @@ void meow_add(char* file){
     FILE* blob = fopen(path_to_blob, "wb");
     rewind(tempfile); // return cursor
     def(tempfile, blob, Z_DEFAULT_COMPRESSION);
+
     add_to_indexfile(path, hash, work_dir);
 
     printf("%s\n", work_dir);
