@@ -7,6 +7,39 @@ char is_path_absolute(char* path){
     return 0;
 }
 
+void get_object_path(char *dest, const char *work_dir, uint8_t *hash) {
+    sprintf(dest, "%s/objects/%02x/", work_dir, hash[0]);
+    mkdir(dest, 0777);
+    
+    char hex_hash[41];
+    for(int i = 0; i < 20; i++) {
+        sprintf(hex_hash + i*2, "%02x", hash[i]);
+    }
+    strcat(dest, hex_hash + 2);
+}
+
+int make_path_relative(const char *root, const char *input, char *output) {
+    char res[PATH_MAX];
+
+    if (realpath(input, res) == NULL) {
+        return -1;
+    }
+
+    if (strncmp(res, root, strlen(root)) != 0) {
+        return -2;
+    }
+
+    const char *relative_ptr = res + strlen(root);
+
+    if (*relative_ptr == '/') {
+        relative_ptr++;
+    }
+
+    strcpy(output, relative_ptr);
+
+    return 0;
+}
+
 char find_work_dir(char* buffer){
     char cwd[PATH_MAX];
     getcwd(cwd, PATH_MAX);
@@ -38,8 +71,89 @@ char find_work_dir(char* buffer){
     return 1;
 }
 
-char add_to_indexfile(){
 
+void find_project_dir(char* buffer, char* work_dir){
+    char project_dir[PATH_MAX];
+    int len = strlen(work_dir);
+    if (len > 6) {
+        strncpy(buffer, work_dir, len - 6);
+        buffer[len-6] = '\0';
+    } else {
+        strcpy(buffer, "/");
+    }
+}
+
+
+char add_to_indexfile(char* path, char* hash, char* work_dir){
+    struct stat st;
+    if (stat(path, &st) != 0) assert("Err: file doesn`t exists");
+
+    int64_t file_mtime = st.st_mtime;
+
+
+    char path_to_index[PATH_MAX];
+    char path_to_indextmp[PATH_MAX];
+    snprintf(path_to_index, PATH_MAX, "%s/index", work_dir);
+    snprintf(path_to_indextmp, PATH_MAX, "%s/index.tmp", work_dir);
+
+    FILE* index = fopen(path_to_index, "rb");
+    if (!index) assert("index not found");
+    FILE* index_tmp = fopen(path_to_indextmp, "wb");
+    if (!index) assert("index.tmp not created");
+    unsigned int something = 0;
+    fprintf(index_tmp, "%u\n", something);
+    unsigned int entries_amt;
+    fscanf(index, "%u\n", &entries_amt);
+
+    puts("1");
+
+    indexEntry entry;
+
+    char project_dir[PATH_MAX];
+    char rel_path[PATH_MAX];
+    find_project_dir(project_dir, work_dir);
+    make_path_relative(project_dir, path, rel_path);
+
+    char tmpbuffer[PATH_MAX+64];
+
+    char already_in_index = 0;
+    for (int i = 0; i < entries_amt; i++){
+        fscanf(index, "%40s %hhu %lld %s", entry.hash, &entry.status, &entry.mtime, entry.path);
+        if (!strcmp(rel_path, entry.path)){ // already in index -> modified
+            already_in_index = 1;
+            entry.status = 0;
+            strcpy(entry.hash, hash);
+            entry.mtime = file_mtime;
+        }
+        fprintf(index_tmp, "%s %hhu %lld %s\n", entry.hash, entry.status, entry.mtime, entry.path);
+    }
+
+    puts("2");
+    printf("%s\n", rel_path);
+    if(!already_in_index){
+        strcpy(entry.hash, hash);
+        strcpy(entry.path, rel_path);
+        entry.status = 1;
+        entry.mtime = file_mtime;
+        fprintf(index_tmp, "%s %hhu %lld %s\n", entry.hash, entry.status, entry.mtime, entry.path);
+        entries_amt++;
+        puts("2.5");
+    }
+
+    puts("3");
+    rewind(index_tmp);
+    fprintf(index_tmp, "%u\n", entries_amt);
+ 
+    fclose(index_tmp);
+    fclose(index);
+
+    puts("1");
+    if (rename(path_to_indextmp, path_to_index) != 0) {
+        perror("Err: rename failed");
+        return -1;
+    }
+
+    return 0;
 }
 
 /* zpipe.c: example of proper use of zlib's inflate() and deflate()
