@@ -82,7 +82,7 @@ void find_project_dir(char* buffer, char* work_dir){
     }
 }
 
-char create_object(char* path, char* work_dir, struct stat* st, char* hash){
+char create_blob(char* path, char* work_dir, struct stat* st, char* hash){
     char work_obj_dir[PATH_MAX];
     char path_to_tempfile[PATH_MAX];
     char path_to_blob_dir[PATH_MAX];
