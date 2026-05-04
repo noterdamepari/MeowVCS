@@ -68,6 +68,7 @@ void meow_add(char* file){
     FILE* tempfile = fopen(path_to_tempfile, "w+b");
 
     uint8_t hash[CHUNK];
+    uint8_t hex_hash[CHUNK];
     char read_buffer[CHUNK];
 
     // формируем хедер
@@ -86,7 +87,9 @@ void meow_add(char* file){
     SHA1Final(hash, &sha);
 
 
-    if (add_to_indexfile(path, hash, work_dir) != 0){
+    for (int i = 0; i < 20; i++) sprintf(hex_hash+(i*2), "%02x", hash[i]);    
+    hex_hash[40] = '\0';
+    if (add_to_indexfile(path, hex_hash, work_dir) != 0){
         return;
     } 
 
@@ -112,7 +115,7 @@ void meow_add(char* file){
     rewind(tempfile); // return cursor
     def(tempfile, blob, Z_DEFAULT_COMPRESSION);
 
-    add_to_indexfile(path, hash, work_dir);
+    printf("%s\n", hex_hash);
 
     printf("%s\n", work_dir);
     printf("%s\n", work_obj_dir);
