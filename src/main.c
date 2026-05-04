@@ -73,14 +73,17 @@ void meow_add(char* file){
 
     char tmpbuffer[PATH_MAX+64];
 
-    char already_in_index = 0;
+    char inserted = 0;
+    int new_entries_amt = entries_amt;
+    
     for (int i = 0; i < entries_amt; i++){
         fscanf(index, "%40s %hhu %lld %s", entry.hash, &entry.status, &entry.mtime, entry.path);
-        if (!strcmp(rel_path, entry.path)){ // already in index -> modified
-            already_in_index = 1;
+        char strcmp_res = strcmp(rel_path, entry.path);
+        if (!strcmp_res){ // already in index -> modified
+            inserted = 1;
             if (entry.mtime != file_mtime){ // nothing to do
-                uint8_t hex_hash[CHUNK];
-                create_object(path, work_dir, &st, hex_hash);
+                uint8_t hex_hash[41];
+                create_blob(path, work_dir, &st, hex_hash);
                 entry.status = 0;
                 strcpy(entry.hash, hex_hash);
                 entry.mtime = file_mtime;
@@ -88,24 +91,40 @@ void meow_add(char* file){
                 puts("Nothing to do, already in index");
                 return;
             }
+            fprintf(index_tmp, "%s %hhu %lld %s\n", entry.hash, entry.status, entry.mtime, entry.path);
+        } else if (strcmp_res < 0 && !inserted){
+            inserted = 1;
+            new_entries_amt++;
+
+            uint8_t hex_hash[41];
+            create_blob(path, work_dir, &st, hex_hash);
+            indexEntry new_entry;
+            strcpy(new_entry.hash, hex_hash);
+            strcpy(new_entry.path, rel_path);
+            new_entry.status = 1;
+            new_entry.mtime = file_mtime;
+            fprintf(index_tmp, "%s %hhu %lld %s\n", new_entry.hash, new_entry.status, new_entry.mtime, new_entry.path);
+         
+            fprintf(index_tmp, "%s %hhu %lld %s\n", entry.hash, entry.status, entry.mtime, entry.path);
+        } else {
+            fprintf(index_tmp, "%s %hhu %lld %s\n", entry.hash, entry.status, entry.mtime, entry.path);
         }
-        fprintf(index_tmp, "%s %hhu %lld %s\n", entry.hash, entry.status, entry.mtime, entry.path);
     }
 
     printf("%s\n", rel_path);
-    if(!already_in_index){
-        uint8_t hex_hash[CHUNK];
-        create_object(path, work_dir, &st, hex_hash);
+    if(!inserted){
+        uint8_t hex_hash[41];
+        create_blob(path, work_dir, &st, hex_hash);
         strcpy(entry.hash, hex_hash);
         strcpy(entry.path, rel_path);
         entry.status = 1;
         entry.mtime = file_mtime;
         fprintf(index_tmp, "%s %hhu %lld %s\n", entry.hash, entry.status, entry.mtime, entry.path);
-        entries_amt++;
+        new_entries_amt++;
     }
 
     rewind(index_tmp);
-    fprintf(index_tmp, "%u\n", entries_amt);
+    fprintf(index_tmp, "%u\n", new_entries_amt);
  
     fclose(index_tmp);
     fclose(index);
