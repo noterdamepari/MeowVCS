@@ -85,6 +85,7 @@ void find_project_dir(char* buffer, char* work_dir){
 
 
 char add_to_indexfile(char* path, char* hash, char* work_dir){
+    printf("%s", hash);
     struct stat st;
     if (stat(path, &st) != 0) assert("Err: file doesn`t exists");
 
@@ -119,7 +120,7 @@ char add_to_indexfile(char* path, char* hash, char* work_dir){
         fscanf(index, "%40s %hhu %lld %s", entry.hash, &entry.status, &entry.mtime, entry.path);
         if (!strcmp(rel_path, entry.path)){ // already in index -> modified
             already_in_index = 1;
-            if (entry.mtime != file_mtime && !strcmp(entry.hash, hash)){ // nothing to do
+            if (entry.mtime != file_mtime && strcmp(entry.hash, hash)){ // nothing to do
                 entry.status = 0;
                 strcpy(entry.hash, hash);
                 entry.mtime = file_mtime;
