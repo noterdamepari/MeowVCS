@@ -73,7 +73,6 @@ char find_work_dir(char* buffer){
 
 
 void find_project_dir(char* buffer, char* work_dir){
-    char project_dir[PATH_MAX];
     int len = strlen(work_dir);
     if (len > 6) {
         strncpy(buffer, work_dir, len - 6);
@@ -83,76 +82,67 @@ void find_project_dir(char* buffer, char* work_dir){
     }
 }
 
+char create_object(char* path, char* work_dir, struct stat* st, char* hash){
+    char work_obj_dir[PATH_MAX];
+    char path_to_tempfile[PATH_MAX];
+    char path_to_blob_dir[PATH_MAX];
+    char path_to_blob[PATH_MAX];
 
-char add_to_indexfile(char* path, char* hash, char* work_dir){
-    printf("%s", hash);
-    struct stat st;
-    if (stat(path, &st) != 0) assert("Err: file doesn`t exists");
+    snprintf(work_obj_dir, PATH_MAX, "%s%s", work_dir, objects_dir);
+    snprintf(path_to_tempfile, PATH_MAX, "%s/tempfile", work_obj_dir);
 
-    int64_t file_mtime = st.st_mtime;
+    uint8_t binary_hash[CHUNK];
+
+    SHA1_CTX sha;
+    SHA1Init(&sha);
+
+    FILE* f = fopen(path, "rb");
+    if (!f) assert("Cannot open file");
+    FILE* tempfile = fopen(path_to_tempfile, "w+b");
+    if (!tempfile) assert("Cannot create tempfile");
+
+    char read_buffer[CHUNK];
+
+    // формируем хедер
+    char header[64];
+    uint32_t h_len = snprintf(header, sizeof(header), "blob %ld", st->st_size);
+    h_len++;
+
+    SHA1Update(&sha, (uint8_t*)header, h_len); // хешируем хедер блоба
+    fwrite(header, sizeof(char), h_len, tempfile);
+
+    size_t bytes_read;
+    while((bytes_read = fread(read_buffer, sizeof(uint8_t), CHUNK, f)) > 0){
+        SHA1Update(&sha, (uint8_t*)read_buffer, bytes_read);
+        fwrite(read_buffer, sizeof(uint8_t), bytes_read, tempfile);
+    } 
+    SHA1Final(binary_hash, &sha);
+
+    for (int i = 0; i < 20; i++) sprintf(hash+(i*2), "%02x", binary_hash[i]);    
+    hash[40] = '\0';
+
+    char blob_dir_name[3];
+    for (int i = 0; i < 2; i++)
+        blob_dir_name[i] = hash[i];
+    blob_dir_name[2] = '\0';
+    snprintf(path_to_blob_dir, PATH_MAX, "%s/%s", work_obj_dir, blob_dir_name);
+    mkdir(path_to_blob_dir, 0777);
+
+    const char* blob_file_name = hash+2;
+    snprintf(path_to_blob, PATH_MAX, "%s/%s", path_to_blob_dir, blob_file_name);
 
 
-    char path_to_index[PATH_MAX];
-    char path_to_indextmp[PATH_MAX];
-    snprintf(path_to_index, PATH_MAX, "%s/index", work_dir);
-    snprintf(path_to_indextmp, PATH_MAX, "%s/index.tmp", work_dir);
+    FILE* blob = fopen(path_to_blob, "wb");
+    if (!blob) assert("Cannot create blob");
+    rewind(tempfile); // return cursor
+    def(tempfile, blob, Z_DEFAULT_COMPRESSION);
 
-    FILE* index = fopen(path_to_index, "rb");
-    if (!index) assert("index not found");
-    FILE* index_tmp = fopen(path_to_indextmp, "wb");
-    if (!index) assert("index.tmp not created");
-    unsigned int something = 0;
-    fprintf(index_tmp, "%u\n", something);
-    unsigned int entries_amt;
-    fscanf(index, "%u\n", &entries_amt);
+    printf("%s\n", hash);
 
-    indexEntry entry;
-
-    char project_dir[PATH_MAX];
-    char rel_path[PATH_MAX];
-    find_project_dir(project_dir, work_dir);
-    make_path_relative(project_dir, path, rel_path);
-
-    char tmpbuffer[PATH_MAX+64];
-
-    char already_in_index = 0;
-    for (int i = 0; i < entries_amt; i++){
-        fscanf(index, "%40s %hhu %lld %s", entry.hash, &entry.status, &entry.mtime, entry.path);
-        if (!strcmp(rel_path, entry.path)){ // already in index -> modified
-            already_in_index = 1;
-            if (entry.mtime != file_mtime && strcmp(entry.hash, hash)){ // nothing to do
-                entry.status = 0;
-                strcpy(entry.hash, hash);
-                entry.mtime = file_mtime;
-            } else {
-                puts("Nothing to do, already in index");
-                return 1;
-            }
-        }
-        fprintf(index_tmp, "%s %hhu %lld %s\n", entry.hash, entry.status, entry.mtime, entry.path);
-    }
-
-    printf("%s\n", rel_path);
-    if(!already_in_index){
-        strcpy(entry.hash, hash);
-        strcpy(entry.path, rel_path);
-        entry.status = 1;
-        entry.mtime = file_mtime;
-        fprintf(index_tmp, "%s %hhu %lld %s\n", entry.hash, entry.status, entry.mtime, entry.path);
-        entries_amt++;
-    }
-
-    rewind(index_tmp);
-    fprintf(index_tmp, "%u\n", entries_amt);
- 
-    fclose(index_tmp);
-    fclose(index);
-
-    if (rename(path_to_indextmp, path_to_index) != 0) {
-        perror("Err: rename failed");
-        return -1;
-    }
-
+    fclose(f);
+    fclose(tempfile);
+    remove(path_to_tempfile);
+    fclose(blob);
     return 0;
 }
 
