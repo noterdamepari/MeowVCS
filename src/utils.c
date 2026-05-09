@@ -55,15 +55,17 @@ char find_work_dir(char* buffer){
             return 0;
         }
 
-        if (!strcmp(tmp_path, "/")){
+        if (!strcmp(cwd, "/")){
             break; // root
         }
 
         char* last_slash = strrchr(cwd, '/');
-        if (last_slash == cwd){
-            strcpy(cwd, "/"); // root
-        } else if (last_slash){
-            *last_slash = '\0';
+        if(last_slash != NULL){
+            if (last_slash == cwd){
+                strcpy(cwd, "/"); // root
+            } else{
+                *last_slash = '\0';
+            } 
         } else {
             break;
         }
