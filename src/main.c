@@ -1,6 +1,5 @@
 #include "meow.h"
 
-
 const char* default_dir = "/.meow";
 const char* objects_dir = "/objects";
 const char* meow_index = "/index";
@@ -17,7 +16,7 @@ char meow_init(){
     strcpy(path, def_path);
     strcat(path, meow_index);
     FILE* index = fopen(path, "wb");
-    if (!index) assert("Cannot create index");
+    if (!index) perror("Cannot create index");
     fprintf(index, "0");
     fclose(index);
 
@@ -33,7 +32,10 @@ void meow_add(char* file){
     char path_to_indextmp[PATH_MAX];
     char path[PATH_MAX];
 
-    find_work_dir(work_dir);
+    if(find_work_dir(work_dir) == -1){ 
+        fprintf(stderr, "Error: .meow/ not found\n");
+        return; 
+    }
 
     if (!is_path_absolute(file)) {
         getcwd(path, PATH_MAX);
@@ -55,10 +57,13 @@ void meow_add(char* file){
     snprintf(path_to_indextmp, PATH_MAX, "%s/index.tmp", work_dir);
 
     FILE* index = fopen(path_to_index, "rb");
-    if (!index) assert("index not found");
+    if (!index) {
+        fprintf(stderr, "Error: index not found\n");
+        return; 
+    }
 
     FILE* index_tmp = fopen(path_to_indextmp, "wb");
-    if (!index) assert("index.tmp not created");
+    if (!index) perror("index.tmp not created");
 
     fprintf(index_tmp, "0\n");
     unsigned int entries_amt;
@@ -89,6 +94,9 @@ void meow_add(char* file){
                 entry.mtime = file_mtime;
             } else {
                 puts("Nothing to do, already in index");
+                fclose(index_tmp);
+                fclose(index);
+                remove(path_to_indextmp);
                 return;
             }
             fprintf(index_tmp, "%s %hhu %lld %s\n", entry.hash, entry.status, entry.mtime, entry.path);
@@ -140,6 +148,7 @@ int main(int argc, char** argv){
     switch (argc){
         case 2:{
             if (!strcmp(argv[1], "init")) meow_init();
+            if (!strcmp(argv[1], "dir_traverse")) write_project_dir();
             break;
         } 
         case 3:{
