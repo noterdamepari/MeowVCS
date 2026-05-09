@@ -4,7 +4,10 @@ void write_project_dir(){
     char work_dir[PATH_MAX];
     char project_dir[PATH_MAX];
 
-    find_work_dir(work_dir);
+    if(find_work_dir(work_dir) == -1){ 
+        fprintf(stderr, "Error: .meow/ not found\n");
+        return; 
+    }
     find_project_dir(project_dir, work_dir);
 
     dir_traverse(project_dir);
