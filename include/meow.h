@@ -13,6 +13,7 @@
     #include <sys/types.h>
     #include <unistd.h>
     #include <limits.h>
+    #include <dirent.h>
 
     #define CHUNK 16384 // 16kb
     #define PATH_MAX 4096
@@ -30,6 +31,8 @@
     void get_object_path(char *dest, const char *work_dir, uint8_t *hash);
     int def(FILE *source, FILE *dest, int level);
     int inf(FILE *source, FILE *dest);
+    void dir_traverse(const char* project_dir);
+    void write_project_dir();
 
     typedef struct{
         char hash[41]; // hash of file

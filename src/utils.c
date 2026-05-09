@@ -68,7 +68,7 @@ char find_work_dir(char* buffer){
             break;
         }
     }
-    return 1;
+    return -1;
 }
 
 
