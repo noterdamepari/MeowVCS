@@ -15,6 +15,7 @@
     #include <limits.h>
     #include <dirent.h>
 
+
     #define CHUNK 16384 // 16kb
     #define PATH_MAX 4096
 
@@ -22,6 +23,7 @@
     extern const char* default_dir;
     extern const char* objects_dir;
     extern const char* meow_index;
+
 
     char is_path_absolute(char* path);
     char find_work_dir(char* buffer);
@@ -31,7 +33,6 @@
     void get_object_path(char *dest, const char *work_dir, uint8_t *hash);
     int def(FILE *source, FILE *dest, int level);
     int inf(FILE *source, FILE *dest);
-    void dir_traverse(const char* project_dir);
     void write_project_dir();
 
     typedef struct{
@@ -40,6 +41,26 @@
         uint64_t mtime;
         char path[PATH_MAX];
     } indexEntry;
+
+
+
+    typedef struct {
+        char name[255];
+        char hash[41];
+        char dir;
+    } TreeEntry;
+    typedef struct avlTree_t {
+        struct avlTree_t* child[2]; // child0 - left, child1 - right
+        TreeEntry value;
+        int32_t height;
+    }avlTree;
+
+
+    avlTree* avl_create(TreeEntry value);
+    char avl_insert(avlTree** tree, TreeEntry value);
+    char avl_erase(avlTree** tree, TreeEntry value);
+    void avl_traverse(avlTree* tree);
+    void avl_del_tree(avlTree* tree);
 
 
 #endif
