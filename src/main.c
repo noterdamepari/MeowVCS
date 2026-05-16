@@ -175,7 +175,8 @@ void meow_commit(char* msg) {
     for (int i = 0; i < entries_amt; i++) {
         fscanf(index, "%40s %d %lld %s", entries[i].hash, &entries[i].status, &entries[i].mtime, entries[i].path);
     }
-    write_tree(entries, entries_amt);
+    char hash[41];
+    write_tree(entries, entries_amt, 0, hash);
 
     free(entries);
     fclose(index);
