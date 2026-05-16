@@ -1,66 +1,52 @@
 #ifndef MEOW_H
 #define MEOW_H
 
-    #include <stdio.h>
-    #include <string.h>
-    #include <stdlib.h>
-    #include <ctype.h>
-    #include <assert.h>
-    #include <time.h>
-    #include "sha1.h"
-    #include "zlib.h"
-    #include <sys/stat.h>
-    #include <sys/types.h>
-    #include <unistd.h>
-    #include <limits.h>
-    #include <dirent.h>
+#include "sha1.h"
+#include "types.h"
+#include "vector.h"
+#include "zlib.h"
+#include <assert.h>
+#include <ctype.h>
+#include <dirent.h>
+#include <limits.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <time.h>
+#include <unistd.h>
 
+#define CHUNK 16384 // 16kb
 
-    #define CHUNK 16384 // 16kb
-    #define PATH_MAX 4096
+#ifndef PATH_MAX
+#define PATH_MAX 4096
+#endif
 
+extern const char* default_dir;
+extern const char* objects_dir;
+extern const char* meow_index;
 
-    extern const char* default_dir;
-    extern const char* objects_dir;
-    extern const char* meow_index;
+typedef struct avlTree_t {
+    TreeEntry value;
+    struct avlTree_t* child[2]; // child0 - left, child1 - right
+    int32_t height;
+} avlTree;
 
+avlTree* avl_create(TreeEntry value);
+char avl_insert(avlTree** tree, TreeEntry value);
+char avl_erase(avlTree** tree, TreeEntry value);
+void avl_traverse(avlTree* tree);
+void avl_del_tree(avlTree* tree);
 
-    char is_path_absolute(char* path);
-    char find_work_dir(char* buffer);
-    void find_project_dir(char* buffer, char* work_dir);
-    int make_path_relative(const char *root, const char *input, char *output);
-    char create_blob(char* path, char* work_dir, struct stat* st, char* hash);
-    void get_object_path(char *dest, const char *work_dir, uint8_t *hash);
-    int def(FILE *source, FILE *dest, int level);
-    int inf(FILE *source, FILE *dest);
-    void write_project_dir();
-
-    typedef struct{
-        char hash[41]; // hash of file
-        uint8_t status; // 0 - modif, 1 - new, 2 - deleted
-        uint64_t mtime;
-        char path[PATH_MAX];
-    } indexEntry;
-
-
-
-    typedef struct {
-        char name[255];
-        char hash[41];
-        char dir;
-    } TreeEntry;
-    typedef struct avlTree_t {
-        struct avlTree_t* child[2]; // child0 - left, child1 - right
-        TreeEntry value;
-        int32_t height;
-    }avlTree;
-
-
-    avlTree* avl_create(TreeEntry value);
-    char avl_insert(avlTree** tree, TreeEntry value);
-    char avl_erase(avlTree** tree, TreeEntry value);
-    void avl_traverse(avlTree* tree);
-    void avl_del_tree(avlTree* tree);
-
-
+char is_path_absolute(char* path);
+char find_work_dir(char* buffer);
+void find_project_dir(char* buffer, char* work_dir);
+int make_path_relative(const char* root, const char* input, char* output);
+char create_blob(char* path, char* work_dir, struct stat* st, char* hash);
+void get_object_path(char* dest, const char* work_dir, uint8_t* hash);
+int def(FILE* source, FILE* dest, int level);
+int inf(FILE* source, FILE* dest);
+void write_project_dir();
+void write_tree(indexEntry* entries, int entries_amt);
 #endif
