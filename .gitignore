@@ -3,3 +3,5 @@ test
 todo.md
 bin/*
 build/*
+.clangd
+.clang-format
