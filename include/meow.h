@@ -3,7 +3,6 @@
 
 #include "sha1.h"
 #include "types.h"
-#include "vector.h"
 #include "zlib.h"
 #include <assert.h>
 #include <ctype.h>
