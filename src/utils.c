@@ -110,8 +110,6 @@ int object_exists(const char* hash) {
 char create_blob(char* path, char* work_dir, struct stat* st, char* ohash) {
     char work_obj_dir[PATH_MAX];
     char path_to_tempfile[PATH_MAX];
-    char path_to_blob_dir[PATH_MAX];
-    char path_to_blob[PATH_MAX];
 
     snprintf(work_obj_dir, PATH_MAX, "%s%s", work_dir, objects_dir);
     snprintf(path_to_tempfile, PATH_MAX, "%s/tempfile", work_obj_dir);
@@ -223,7 +221,7 @@ void write_tree(const indexEntry* entries, const int entries_amt, int path_offse
     uint32_t h_len = snprintf(header, sizeof(header), "tree %ld", st.st_size);
     h_len++;
 
-    SHA1Update(&sha, (uint8_t*)header, h_len); // хешируем хедер блоба
+    SHA1Update(&sha, (uint8_t*)header, h_len); // хешируем хедер дерева
     fwrite(header, sizeof(char), h_len, tree_obj);
     char read_buffer[CHUNK];
     size_t bytes_read;
