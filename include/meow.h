@@ -9,6 +9,7 @@
 #include <ctype.h>
 #include <dirent.h>
 #include <limits.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -48,5 +49,6 @@ void get_object_path(char* dest, const char* work_dir, uint8_t* hash);
 int def(FILE* source, FILE* dest, int level);
 int inf(FILE* source, FILE* dest);
 void write_project_dir();
-void write_tree(indexEntry* entries, int entries_amt);
+void write_tree(const indexEntry* entries, const int entries_amt, int path_offset, char* ohash);
+void create_object(FILE* f, const char* ihash);
 #endif
