@@ -109,7 +109,7 @@ char create_blob(char* path, char* work_dir, struct stat* st, char* ohash) {
         return 1;
     }
 
-    hash_and_create_obj(BLOB, st, f, ohash);
+    hash_and_create_obj(BLOB, f, ohash);
 
     fclose(f);
     remove(path_to_tempfile);
@@ -156,11 +156,8 @@ void write_tree(const indexEntry* entries, const int entries_amt, int path_offse
 
     fflush(tmp_tree_obj);
     rewind(tmp_tree_obj);
-    int fd = fileno(tmp_tree_obj); // file descriptor
-    struct stat st;
-    fstat(fd, &st);
 
-    hash_and_create_obj(TREE, &st, tmp_tree_obj, ohash);
+    hash_and_create_obj(TREE, tmp_tree_obj, ohash);
 
     fclose(tmp_tree_obj);
 }

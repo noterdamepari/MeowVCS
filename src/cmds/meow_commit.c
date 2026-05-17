@@ -92,13 +92,10 @@ void meow_commit(char* msg) {
 
     fflush(tmp);
     rewind(tmp);
-    struct stat st;
-    int fd = fileno(tmp);
-    fstat(fd, &st);
 
     LOG("\n\n");
     char hash[41];
-    hash_and_create_obj(COMMIT, &st, tmp, hash);
+    hash_and_create_obj(COMMIT, tmp, hash);
 
     if (on_head) {
         FILE* br = fopen(path_to_branch, "wb");

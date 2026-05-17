@@ -50,7 +50,11 @@ static void create_object(FILE* f, const char* ihash) {
     fclose(obj);
 }
 
-void hash_and_create_obj(object_type type, struct stat* st, FILE* f, char* ohash) {
+void hash_and_create_obj(object_type type, FILE* f, char* ohash) {
+    int fd = fileno(f); // file descriptor
+    struct stat st;
+    fstat(fd, &st);
+
     FILE* tmp = tmpfile();
 
     SHA1_CTX sha;
@@ -61,15 +65,15 @@ void hash_and_create_obj(object_type type, struct stat* st, FILE* f, char* ohash
     uint32_t h_len;
     switch (type) {
         case TREE: {
-            h_len = snprintf(header, sizeof(header), "tree %ld", st->st_size);
+            h_len = snprintf(header, sizeof(header), "tree %ld", st.st_size);
             break;
         }
         case BLOB: {
-            h_len = snprintf(header, sizeof(header), "blob %ld", st->st_size);
+            h_len = snprintf(header, sizeof(header), "blob %ld", st.st_size);
             break;
         }
         case COMMIT: {
-            h_len = snprintf(header, sizeof(header), "commit %ld", st->st_size);
+            h_len = snprintf(header, sizeof(header), "commit %ld", st.st_size);
             break;
         }
         default: {
