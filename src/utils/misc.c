@@ -1,8 +1,5 @@
 #include "meow.h"
 #include "object.h"
-#include "types.h"
-#include <stdio.h>
-#include <sys/stat.h>
 
 char is_path_absolute(char* path) {
     if (!path || path[0] == '\0')

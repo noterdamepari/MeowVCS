@@ -1,3 +1,4 @@
+#include "zlib.h"
 #include "meow.h"
 
 /* zpipe.c: example of proper use of zlib's inflate() and deflate()

@@ -1,10 +1,10 @@
 #include "object.h"
 #include "meow.h"
+#include "sha1.h"
+#include "zlib.h"
 
 static int object_exists(const char* hash) {
     char work_obj_dir[PATH_MAX];
-    char path_to_obj_dir[PATH_MAX];
-    char path_to_obj[PATH_MAX];
 
     find_work_dir(work_obj_dir);
     strcat(work_obj_dir, objects_dir);
