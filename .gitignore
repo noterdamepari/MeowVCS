@@ -5,3 +5,4 @@ bin/*
 build/*
 .clangd
 .clang-format
+compile_commands.json

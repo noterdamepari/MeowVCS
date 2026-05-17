@@ -1,17 +1,25 @@
 CMP := gcc
 CFLAGS := -O2 -Wall
-INCLUDES := -I ./include -I./lib/zlib
-SRC := $(wildcard src/*.c)
-OBJ := $(SRC:src/%.c=build/%.o)
-LIB := $(wildcard lib/*.a)
+INCLUDES := -I./include -I./lib/zlib
 
-build: $(OBJ)
-	$(CMP) $^ $(LIB) -o bin/meow
+SRC := $(shell find src -name "*.c")
+
+OBJ := $(patsubst src/%.c, build/%.o, $(SRC))
+
+LIB := $(wildcard lib/*.a)
+TARGET := bin/meow
+
+build: $(TARGET)
+
+$(TARGET): $(OBJ)
+	@mkdir -p bin
+	$(CMP) $(OBJ) $(LIB) -o $(TARGET)
 
 build/%.o: src/%.c
-	$(CMP) $(CFLAGS) -c $< -I ./include -o $@
+	@mkdir -p $(dir $@)
+	$(CMP) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
-clean: 
-	rm -f build/*
+clean:
+	rm -rf build bin
 
 .PHONY: build clean
