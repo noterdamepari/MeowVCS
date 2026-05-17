@@ -64,10 +64,10 @@ void meow_add(char* file) {
         if (!strcmp_res) { // already in index -> modified
             inserted = 1;
             if (entry.mtime != file_mtime) { // nothing to do
-                uint8_t hex_hash[41];
-                create_blob(path, work_dir, &st, hex_hash);
+                char hash[41];
+                create_blob(path, work_dir, &st, hash);
                 entry.status = 0;
-                strcpy(entry.hash, hex_hash);
+                strcpy(entry.hash, hash);
                 entry.mtime = file_mtime;
             } else {
                 puts("Nothing to do, already in index");
@@ -81,10 +81,10 @@ void meow_add(char* file) {
             inserted = 1;
             new_entries_amt++;
 
-            uint8_t hex_hash[41];
-            create_blob(path, work_dir, &st, hex_hash);
+            char hash[41];
+            create_blob(path, work_dir, &st, hash);
             indexEntry new_entry;
-            strcpy(new_entry.hash, hex_hash);
+            strcpy(new_entry.hash, hash);
             strcpy(new_entry.path, rel_path);
             new_entry.status = 1;
             new_entry.mtime = file_mtime;
@@ -97,9 +97,9 @@ void meow_add(char* file) {
     }
 
     if (!inserted) {
-        uint8_t hex_hash[41];
-        create_blob(path, work_dir, &st, hex_hash);
-        strcpy(entry.hash, hex_hash);
+        char hash[41];
+        create_blob(path, work_dir, &st, hash);
+        strcpy(entry.hash, hash);
         strcpy(entry.path, rel_path);
         entry.status = 1;
         entry.mtime = file_mtime;
