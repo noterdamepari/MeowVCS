@@ -21,13 +21,15 @@ char meow_init() {
     FILE* cfg = fopen(path, "wb");
     if (!cfg)
         perror("Cannot create config file");
+
     char buffer[255];
     printf("Your username: ");
     scanf("%s", buffer);
-    fprintf(cfg, "%s\n", buffer);
+    unsigned len = strlen(buffer);
+    buffer[len] = ' ';
     printf("Your email: ");
-    scanf("%s", buffer);
-    fprintf(cfg, "%s\n", buffer);
+    scanf("%s", buffer + len + 1);
+    fprintf(cfg, "%s", buffer);
     puts("Project initialized");
     fclose(cfg);
 

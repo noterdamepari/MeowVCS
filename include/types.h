@@ -1,11 +1,8 @@
 #ifndef TYPES_H
 #define TYPES_H
 
+#include <limits.h>
 #include <stdint.h>
-
-#ifndef PATH_MAX
-#define PATH_MAX 4096
-#endif
 
 typedef struct {
     uint64_t mtime;
