@@ -13,7 +13,7 @@ int main(int argc, char** argv) {
             if (!strcmp(argv[1], "dir_traverse"))
                 // write_project_dir();
                 if (!strcmp(argv[1], "commit"))
-                    puts("Сomment not found");
+                    fprintf(stderr, "Error: Сomment not found\n");
             break;
         }
         case 3: {
@@ -24,7 +24,7 @@ int main(int argc, char** argv) {
             break;
         }
         default: {
-            puts("Err: No arguments");
+            fprintf(stderr, "Error: No arguments\n");
             break;
         }
     }

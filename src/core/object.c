@@ -40,10 +40,8 @@ static void create_object(FILE* f, const char* ihash) {
     const char* obj_file_name = ihash + 2;
     snprintf(path_to_obj, PATH_MAX, "%s/%s", path_to_obj_dir, obj_file_name);
     FILE* obj = fopen(path_to_obj, "wb");
-    if (!obj) {
-        printf("Cannot create blob");
-        return;
-    }
+    if (!obj)
+        perror("Error: Cannot create blob");
     rewind(f); // return cursor
     def(f, obj, Z_DEFAULT_COMPRESSION);
     LOG("object created - %s\n", ihash);
@@ -56,6 +54,10 @@ void hash_and_create_obj(object_type type, FILE* f, char* ohash) {
     fstat(fd, &st);
 
     FILE* tmp = tmpfile();
+    if (!tmp) {
+        perror("Error: Cannot create tempfile in hash_and_create_obj func");
+        exit(EXIT_FAILURE);
+    }
 
     SHA1_CTX sha;
     SHA1Init(&sha);

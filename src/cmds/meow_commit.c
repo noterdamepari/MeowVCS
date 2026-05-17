@@ -10,8 +10,8 @@
 
 void meow_commit(char* msg) {
     if (!msg) {
-        printf("Сomment not found");
-        return;
+        fprintf(stderr, "Сomment not found\n");
+        exit(EXIT_FAILURE);
     }
     char work_dir[PATH_MAX];
     char path_to_index[PATH_MAX];
@@ -20,7 +20,7 @@ void meow_commit(char* msg) {
 
     if (find_work_dir(work_dir) == -1) {
         fprintf(stderr, "Error: .meow/ not found\n");
-        return;
+        exit(EXIT_FAILURE);
     }
     snprintf(path_to_index, PATH_MAX, "%s/index", work_dir);
     snprintf(path_to_cfg, PATH_MAX, "%s/config", work_dir);
@@ -29,7 +29,7 @@ void meow_commit(char* msg) {
     FILE* index = fopen(path_to_index, "rb");
     if (!index) {
         fprintf(stderr, "Error: index not found\n");
-        return;
+        exit(EXIT_FAILURE);
     }
     int entries_amt;
     fscanf(index, "%d", &entries_amt);
@@ -37,7 +37,7 @@ void meow_commit(char* msg) {
     LOG("Index content:");
     LOG("MSG: %s\n", msg);
     for (int i = 0; i < entries_amt; i++) {
-        fscanf(index, "%40s %d %lld %s", entries[i].hash, &entries[i].status, &entries[i].mtime, entries[i].path);
+        fscanf(index, "%40s %d %ld %s", entries[i].hash, &entries[i].status, &entries[i].mtime, entries[i].path);
     }
 
     char tree_hash[41];
@@ -48,14 +48,14 @@ void meow_commit(char* msg) {
     FILE* cfg = fopen(path_to_cfg, "rb");
     if (!cfg) {
         fprintf(stderr, "Error: config file not found\n");
-        return;
+        exit(EXIT_FAILURE);
     }
 
     char buffer[256];
     FILE* head = fopen(path_to_head, "rb");
     if (!head) {
         fprintf(stderr, "Error: head not found\n");
-        return;
+        exit(EXIT_FAILURE);
     }
     fgets(buffer, 256, head);
 
@@ -68,14 +68,13 @@ void meow_commit(char* msg) {
         LOG("\n%s\n\n", path_to_branch);
         FILE* br = fopen(path_to_branch, "rb");
         if (!br) {
-            puts("Cannot open branch file");
-            return;
+            fprintf(stderr, "Error: Cannot open branch file\n");
         }
         on_head = 1;
         fscanf(br, "%40s", parent);
         fclose(br);
     } else {
-        printf("Error: You not on head now");
+        fprintf(stderr, "Error: You not on head now\n");
     }
 
     fprintf(tmp, "tree %s\n", tree_hash);
@@ -100,18 +99,17 @@ void meow_commit(char* msg) {
     if (on_head) {
         FILE* br = fopen(path_to_branch, "wb");
         if (!br) {
-            puts("Cannot open branch file");
-            return;
+            fprintf(stderr, "Error: Cannot open branch file\n");
+            exit(EXIT_FAILURE);
         }
-        on_head = 1;
-        fprintf(br, "%40s", hash);
+        fprintf(br, "%s", hash);
         fclose(br);
     }
     char* branch_name = strrchr(path_to_branch, '/') + 1;
     if (!strcmp(parent, "nil"))
-        printf("[%s (root-commit) %s] %s", hash, branch_name, msg);
+        printf("[%s (root-commit) %s] %s\n", hash, branch_name, msg);
     else
-        printf("[%s %s] %s", hash, branch_name, msg);
+        printf("[%s %s] %s\n", hash, branch_name, msg);
     free(entries);
     fclose(index);
     fclose(cfg);

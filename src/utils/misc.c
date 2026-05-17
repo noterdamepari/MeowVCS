@@ -1,5 +1,6 @@
 #include "meow.h"
 #include "object.h"
+#include "types.h"
 
 char is_path_absolute(char* path) {
     if (!path || path[0] == '\0')
@@ -118,9 +119,15 @@ char create_blob(char* path, char* work_dir, struct stat* st, char* ohash) {
 
 void write_tree(const indexEntry* entries, const int entries_amt, int path_offset, char* ohash) {
     FILE* tmp_tree_obj = tmpfile();
+    if (!tmp_tree_obj) {
+        perror("Error: Cannot create tempfile in write_tree func");
+        exit(EXIT_FAILURE);
+    }
 
     int i = 0;
     while (i < entries_amt) {
+        if (entries[i].status == DELETED)
+            continue;
         const char* path = entries[i].path + path_offset;
         char* slash = strchr(path, '/');
 
