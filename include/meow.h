@@ -1,6 +1,7 @@
 #ifndef MEOW_H
 #define MEOW_H
 
+#include "object.h"
 #include "sha1.h"
 #include "types.h"
 #include "zlib.h"
@@ -49,5 +50,4 @@ int def(FILE* source, FILE* dest, int level);
 int inf(FILE* source, FILE* dest);
 void write_project_dir();
 void write_tree(const indexEntry* entries, const int entries_amt, int path_offset, char* ohash);
-void create_object(FILE* f, const char* ihash);
 #endif

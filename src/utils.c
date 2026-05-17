@@ -1,4 +1,5 @@
 #include "meow.h"
+#include "object.h"
 #include "types.h"
 #include <stdio.h>
 #include <sys/stat.h>
@@ -89,21 +90,12 @@ void find_project_dir(char* buffer, char* work_dir) {
     }
 }
 
-int object_exists(const char* hash) {
-    char work_obj_dir[PATH_MAX];
-    char path_to_obj_dir[PATH_MAX];
-    char path_to_obj[PATH_MAX];
-
-    find_work_dir(work_obj_dir);
-    strcat(work_obj_dir, objects_dir);
-    char path[PATH_MAX];
-
-    snprintf(path, PATH_MAX, "%s/%.2s/%s", work_obj_dir, hash, hash + 2);
-
-    if (access(path, F_OK) == 0) {
-        return 1; // Файл существует
-    } else {
-        return 0; // Файла нет
+static void get_dirname(const char* path, char* dst) {
+    char* slash = strchr(path, '/');
+    if (slash) {
+        size_t len = slash - path;
+        strncpy(dst, path, len);
+        dst[len] = '\0';
     }
 }
 
@@ -114,57 +106,15 @@ char create_blob(char* path, char* work_dir, struct stat* st, char* ohash) {
     snprintf(work_obj_dir, PATH_MAX, "%s%s", work_dir, objects_dir);
     snprintf(path_to_tempfile, PATH_MAX, "%s/tempfile", work_obj_dir);
 
-    uint8_t binary_hash[CHUNK];
-
-    SHA1_CTX sha;
-    SHA1Init(&sha);
-
     FILE* f = fopen(path, "rb");
     if (!f)
         assert("Cannot open file");
-    FILE* tempfile = tmpfile();
-    if (!tempfile)
-        assert("Cannot create tempfile");
 
-    char read_buffer[22];
-
-    // формируем хедер
-    char header[64];
-    uint32_t h_len = snprintf(header, sizeof(header), "blob %ld", st->st_size);
-    h_len++;
-
-    SHA1Update(&sha, (uint8_t*)header, h_len); // хешируем хедер блоба
-    fwrite(header, sizeof(char), h_len, tempfile);
-
-    size_t bytes_read;
-    while ((bytes_read = fread(read_buffer, sizeof(uint8_t), CHUNK, f)) > 0) {
-        SHA1Update(&sha, (uint8_t*)read_buffer, bytes_read);
-        fwrite(read_buffer, sizeof(uint8_t), bytes_read, tempfile);
-    }
-    SHA1Final(binary_hash, &sha);
-
-    for (int i = 0; i < 20; i++)
-        sprintf(ohash + (i * 2), "%02x", binary_hash[i]);
-    ohash[40] = '\0';
-
-    if (!object_exists(ohash))
-        create_object(tempfile, ohash);
-    else
-        puts("obj already exists");
+    hash_and_create_obj(BLOB, st, f, ohash);
 
     fclose(f);
-    fclose(tempfile);
     remove(path_to_tempfile);
     return 0;
-}
-
-static void get_dirname(const char* path, char* dst) {
-    char* slash = strchr(path, '/');
-    if (slash) {
-        size_t len = slash - path;
-        strncpy(dst, path, len);
-        dst[len] = '\0';
-    }
 }
 
 void write_tree(const indexEntry* entries, const int entries_amt, int path_offset, char* ohash) {
@@ -211,64 +161,7 @@ void write_tree(const indexEntry* entries, const int entries_amt, int path_offse
     struct stat st;
     fstat(fd, &st);
 
-    FILE* tree_obj = tmpfile();
+    hash_and_create_obj(TREE, &st, tmp_tree_obj, ohash);
 
-    SHA1_CTX sha;
-    SHA1Init(&sha);
-    uint8_t binary_hash[22];
-
-    char header[64];
-    uint32_t h_len = snprintf(header, sizeof(header), "tree %ld", st.st_size);
-    h_len++;
-
-    SHA1Update(&sha, (uint8_t*)header, h_len); // хешируем хедер дерева
-    fwrite(header, sizeof(char), h_len, tree_obj);
-    char read_buffer[CHUNK];
-    size_t bytes_read;
-    while ((bytes_read = fread(read_buffer, sizeof(uint8_t), CHUNK, tmp_tree_obj)) > 0) {
-        SHA1Update(&sha, (uint8_t*)read_buffer, bytes_read);
-        fwrite(read_buffer, sizeof(uint8_t), bytes_read, tree_obj);
-    }
-    SHA1Final(binary_hash, &sha);
-
-    for (int i = 0; i < 20; i++)
-        sprintf(ohash + (i * 2), "%02x", binary_hash[i]);
-    ohash[40] = '\0';
-
-    rewind(tree_obj);
-    if (!object_exists(ohash))
-        create_object(tree_obj, ohash);
-    else
-        puts("obj already exists");
-
-    fclose(tree_obj);
     fclose(tmp_tree_obj);
-}
-
-void create_object(FILE* f, const char* ihash) {
-    char work_obj_dir[PATH_MAX];
-    char path_to_obj_dir[PATH_MAX];
-    char path_to_obj[PATH_MAX];
-
-    find_work_dir(work_obj_dir);
-    strcat(work_obj_dir, objects_dir);
-
-    char obj_dir_name[3];
-    for (int i = 0; i < 2; i++) {
-        obj_dir_name[i] = ihash[i];
-    }
-    obj_dir_name[2] = '\0';
-    snprintf(path_to_obj_dir, PATH_MAX, "%s/%s", work_obj_dir, obj_dir_name);
-
-    mkdir(path_to_obj_dir, 0777);
-
-    const char* obj_file_name = ihash + 2;
-    snprintf(path_to_obj, PATH_MAX, "%s/%s", path_to_obj_dir, obj_file_name);
-    FILE* obj = fopen(path_to_obj, "wb");
-    if (!obj)
-        assert("Cannot create blob");
-    rewind(f); // return cursor
-    def(f, obj, Z_DEFAULT_COMPRESSION);
-    printf("object created - %s\n", ihash);
-    fclose(obj);
 }
