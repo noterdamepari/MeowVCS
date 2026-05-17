@@ -8,13 +8,19 @@ typedef enum {
     MODIFIED,
     NEW,
     DELETED
-} status;
+} file_status;
+
+typedef enum {
+    STAGED,
+    COMMITED
+} stage_status;
 
 typedef struct {
     uint64_t mtime;
     int mode;
-    char hash[41]; // hash of file
-    status status; // 0 - modif, 1 - new, 2 - deleted
+    char hash[41];        // hash of file
+    file_status fstatus;  // 0 - modif, 1 - new, 2 - deleted
+    stage_status sstatus; // 0 - staged, 1 - commited
     char path[PATH_MAX];
 } indexEntry;
 

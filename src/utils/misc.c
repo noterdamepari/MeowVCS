@@ -127,7 +127,7 @@ void write_tree(const indexEntry* entries, const int entries_amt, int path_offse
 
     int i = 0;
     while (i < entries_amt) {
-        if (entries[i].status == DELETED)
+        if (entries[i].fstatus == DELETED)
             continue;
         const char* path = entries[i].path + path_offset;
         char* slash = strchr(path, '/');

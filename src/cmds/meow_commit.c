@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <unistd.h>
 
 void meow_commit(char* msg) {
     if (!msg) {
@@ -37,7 +38,7 @@ void meow_commit(char* msg) {
     LOG("Index content:");
     LOG("MSG: %s\n", msg);
     for (int i = 0; i < entries_amt; i++) {
-        fscanf(index, "%40s %o %d %ld %s", entries[i].hash, &entries[i].mode, &entries[i].status, &entries[i].mtime, entries[i].path);
+        fscanf(index, "%40s %o %d %d %ld %s", entries[i].hash, &entries[i].mode, &entries[i].fstatus, &entries[i].sstatus, &entries[i].mtime, entries[i].path);
     }
 
     char tree_hash[41];
@@ -110,7 +111,17 @@ void meow_commit(char* msg) {
         printf("[%s (root-commit) %s] %s\n", hash, branch_name, msg);
     else
         printf("[%s %s] %s\n", hash, branch_name, msg);
-    free(entries);
+
     fclose(index);
+
+    FILE* new_index = fopen(path_to_index, "wb");
+    fprintf(new_index, "%u\n", entries_amt);
+    for (int i = 0; i < entries_amt; i++) {
+        entries[i].sstatus = COMMITED;
+        fprintf(index, "%40s %o %d %d %ld %s\n", entries[i].hash, entries[i].mode, entries[i].fstatus, entries[i].sstatus, entries[i].mtime, entries[i].path);
+    }
+
+    free(entries);
     fclose(cfg);
+    fclose(head);
 }

@@ -64,14 +64,15 @@ void meow_add(char* file) {
     int new_entries_amt = entries_amt;
 
     for (int i = 0; i < entries_amt; i++) {
-        fscanf(index, "%40s %o %hhu %ld %s", entry.hash, &entry.mode, &entry.status, &entry.mtime, entry.path);
+        fscanf(index, "%40s %o %hhu %hhu %ld %s", entry.hash, &entry.mode, &entry.fstatus, &entry.sstatus, &entry.mtime, entry.path);
         char strcmp_res = strcmp(rel_path, entry.path);
         if (!strcmp_res) { // already in index -> modified
             inserted = 1;
             if (entry.mtime != file_mtime) { // file has been changed
                 char hash[41];
                 create_blob(path, work_dir, &st, hash);
-                entry.status = MODIFIED;
+                entry.fstatus = MODIFIED;
+                entry.sstatus = STAGED;
                 strcpy(entry.hash, hash);
                 entry.mode = file_mode;
                 entry.mtime = file_mtime;
@@ -82,7 +83,7 @@ void meow_add(char* file) {
                 remove(path_to_indextmp);
                 return;
             }
-            fprintf(index_tmp, "%s %o %hhu %ld %s\n", entry.hash, entry.mode, entry.status, entry.mtime, entry.path);
+            fprintf(index_tmp, "%s %o %hhu %hhu %ld %s\n", entry.hash, entry.mode, entry.fstatus, entry.sstatus, entry.mtime, entry.path);
         } else if (strcmp_res < 0 && !inserted) {
             inserted = 1;
             new_entries_amt++;
@@ -92,14 +93,15 @@ void meow_add(char* file) {
             indexEntry new_entry;
             strcpy(new_entry.hash, hash);
             strcpy(new_entry.path, rel_path);
-            new_entry.status = NEW;
+            new_entry.fstatus = NEW;
+            new_entry.sstatus = STAGED;
             new_entry.mtime = file_mtime;
             new_entry.mode = file_mode;
-            fprintf(index_tmp, "%s %o %hhu %ld %s\n", new_entry.hash, new_entry.mode, new_entry.status, new_entry.mtime, new_entry.path);
+            fprintf(index_tmp, "%s %o %hhu %hhu %ld %s\n", new_entry.hash, new_entry.mode, new_entry.fstatus, new_entry.sstatus, new_entry.mtime, new_entry.path);
 
-            fprintf(index_tmp, "%s %o %hhu %ld %s\n", entry.hash, entry.mode, entry.status, entry.mtime, entry.path);
+            fprintf(index_tmp, "%s %o %hhu %hhu %ld %s\n", entry.hash, entry.mode, entry.fstatus, entry.sstatus, entry.mtime, entry.path);
         } else {
-            fprintf(index_tmp, "%s %o %hhu %ld %s\n", entry.hash, entry.mode, entry.status, entry.mtime, entry.path);
+            fprintf(index_tmp, "%s %o %hhu %hhu %ld %s\n", entry.hash, entry.mode, entry.fstatus, entry.sstatus, entry.mtime, entry.path);
         }
     }
 
@@ -108,10 +110,11 @@ void meow_add(char* file) {
         create_blob(path, work_dir, &st, hash);
         strcpy(entry.hash, hash);
         strcpy(entry.path, rel_path);
-        entry.status = 1;
+        entry.fstatus = NEW;
+        entry.sstatus = STAGED;
         entry.mtime = file_mtime;
         entry.mode = file_mode;
-        fprintf(index_tmp, "%s %o %hhu %ld %s\n", entry.hash, entry.mode, entry.status, entry.mtime, entry.path);
+        fprintf(index_tmp, "%s %o %hhu %hhu %ld %s\n", entry.hash, entry.mode, entry.fstatus, entry.sstatus, entry.mtime, entry.path);
         new_entries_amt++;
     }
     LOG("%s added to index\n with %o mode", rel_path, entry.mode);
