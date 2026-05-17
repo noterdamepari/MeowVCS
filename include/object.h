@@ -2,8 +2,9 @@
 #define OBJECT_H
 #include "stdio.h"
 #include <sys/stat.h>
+
 typedef enum {
-    BLOB = 0,
+    BLOB,
     TREE,
     COMMIT
 } object_type;

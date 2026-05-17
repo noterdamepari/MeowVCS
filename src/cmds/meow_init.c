@@ -1,5 +1,6 @@
 #include "meow.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 char meow_init() {
     char def_path[PATH_MAX];
@@ -12,15 +13,19 @@ char meow_init() {
 
     snprintf(path, PATH_MAX, "%s/index", def_path);
     FILE* index = fopen(path, "wb");
-    if (!index)
+    if (!index) {
         perror("Cannot create index");
+        exit(EXIT_FAILURE);
+    }
     fprintf(index, "0");
     fclose(index);
 
     snprintf(path, PATH_MAX, "%s/config", def_path);
     FILE* cfg = fopen(path, "wb");
-    if (!cfg)
+    if (!cfg) {
         perror("Cannot create config file");
+        exit(EXIT_FAILURE);
+    }
 
     char username[255];
     char email[255];
@@ -41,15 +46,19 @@ char meow_init() {
 
     snprintf(path, PATH_MAX, "%s/refs/heads/master", def_path);
     FILE* master_branch = fopen(path, "wb");
-    if (!master_branch)
+    if (!master_branch) {
         perror("Cannot create branch file");
+        exit(EXIT_FAILURE);
+    }
     fprintf(master_branch, "nil");
     fclose(master_branch);
 
     snprintf(path, PATH_MAX, "%s/HEAD", def_path);
     FILE* head = fopen(path, "wb");
-    if (!head)
+    if (!head) {
         perror("Cannot create HEAD file");
+        exit(EXIT_FAILURE);
+    }
     fprintf(head, "ref: refs/heads/master");
     fclose(head);
     return 0;

@@ -1,6 +1,7 @@
 #include "misc.h"
 #include "types.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -25,8 +26,8 @@ void meow_add(char* file) {
 
     struct stat st;
     if (stat(path, &st) != 0) {
-        puts("Err: file doesn`t exists");
-        return;
+        fprintf(stderr, "Error: File doesn`t exists\n");
+        exit(EXIT_FAILURE);
     }
 
     int64_t file_mtime = st.st_mtime;
@@ -36,13 +37,15 @@ void meow_add(char* file) {
 
     FILE* index = fopen(path_to_index, "rb");
     if (!index) {
-        fprintf(stderr, "Error: index not found\n");
-        return;
+        perror("Error: index not found");
+        exit(EXIT_FAILURE);
     }
 
     FILE* index_tmp = fopen(path_to_indextmp, "wb");
-    if (!index)
-        perror("index.tmp not created");
+    if (!index_tmp) {
+        perror("Error: index.tmp not created");
+        exit(EXIT_FAILURE);
+    }
 
     fprintf(index_tmp, "0\n");
     unsigned int entries_amt;
@@ -59,14 +62,14 @@ void meow_add(char* file) {
     int new_entries_amt = entries_amt;
 
     for (int i = 0; i < entries_amt; i++) {
-        fscanf(index, "%40s %hhu %lld %s", entry.hash, &entry.status, &entry.mtime, entry.path);
+        fscanf(index, "%40s %hhu %ld %s", entry.hash, &entry.status, &entry.mtime, entry.path);
         char strcmp_res = strcmp(rel_path, entry.path);
         if (!strcmp_res) { // already in index -> modified
             inserted = 1;
-            if (entry.mtime != file_mtime) { // nothing to do
+            if (entry.mtime != file_mtime) { // file has been changed
                 char hash[41];
                 create_blob(path, work_dir, &st, hash);
-                entry.status = 0;
+                entry.status = MODIFIED;
                 strcpy(entry.hash, hash);
                 entry.mtime = file_mtime;
             } else {
@@ -76,7 +79,7 @@ void meow_add(char* file) {
                 remove(path_to_indextmp);
                 return;
             }
-            fprintf(index_tmp, "%s %hhu %lld %s\n", entry.hash, entry.status, entry.mtime, entry.path);
+            fprintf(index_tmp, "%s %hhu %ld %s\n", entry.hash, entry.status, entry.mtime, entry.path);
         } else if (strcmp_res < 0 && !inserted) {
             inserted = 1;
             new_entries_amt++;
@@ -86,13 +89,13 @@ void meow_add(char* file) {
             indexEntry new_entry;
             strcpy(new_entry.hash, hash);
             strcpy(new_entry.path, rel_path);
-            new_entry.status = 1;
+            new_entry.status = NEW;
             new_entry.mtime = file_mtime;
-            fprintf(index_tmp, "%s %hhu %lld %s\n", new_entry.hash, new_entry.status, new_entry.mtime, new_entry.path);
+            fprintf(index_tmp, "%s %hhu %ld %s\n", new_entry.hash, new_entry.status, new_entry.mtime, new_entry.path);
 
-            fprintf(index_tmp, "%s %hhu %lld %s\n", entry.hash, entry.status, entry.mtime, entry.path);
+            fprintf(index_tmp, "%s %hhu %ld %s\n", entry.hash, entry.status, entry.mtime, entry.path);
         } else {
-            fprintf(index_tmp, "%s %hhu %lld %s\n", entry.hash, entry.status, entry.mtime, entry.path);
+            fprintf(index_tmp, "%s %hhu %ld %s\n", entry.hash, entry.status, entry.mtime, entry.path);
         }
     }
 
@@ -103,7 +106,7 @@ void meow_add(char* file) {
         strcpy(entry.path, rel_path);
         entry.status = 1;
         entry.mtime = file_mtime;
-        fprintf(index_tmp, "%s %hhu %lld %s\n", entry.hash, entry.status, entry.mtime, entry.path);
+        fprintf(index_tmp, "%s %hhu %ld %s\n", entry.hash, entry.status, entry.mtime, entry.path);
         new_entries_amt++;
     }
     printf("%s added to index\n", rel_path);
@@ -115,7 +118,8 @@ void meow_add(char* file) {
     fclose(index);
 
     if (rename(path_to_indextmp, path_to_index) != 0) {
-        perror("Err: rename failed");
+        perror("Error: rename failed");
+        exit(EXIT_FAILURE);
         return;
     }
 }
