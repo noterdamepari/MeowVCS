@@ -11,6 +11,9 @@ TARGET := bin/meow
 
 build: $(TARGET)
 
+dbg: CFLAGS := -O2 -Wall -DDEBUG
+dbg: build
+
 $(TARGET): $(OBJ)
 	@mkdir -p bin
 	$(CMP) $(OBJ) $(LIB) -o $(TARGET)
