@@ -64,11 +64,10 @@ void meow_commit(char* msg) {
     int fd = fileno(tmp);
     fstat(fd, &st);
 
+    printf("\n\n");
     char hash[41];
     hash_and_create_obj(COMMIT, &st, tmp, hash);
-    printf("%s", hash);
 
-    printf("\n\n");
     free(entries);
     fclose(index);
     fclose(cfg);
