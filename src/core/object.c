@@ -93,10 +93,10 @@ void hash_and_create_obj(object_type type, struct stat* st, FILE* f, char* ohash
     ohash[40] = '\0';
 
     rewind(tmp);
-    if (!object_exists(ohash))
+    if (!object_exists(ohash)) {
         create_object(tmp, ohash);
-    else
+    } else {
         LOG("obj already exists");
-
+    }
     fclose(tmp);
 }
