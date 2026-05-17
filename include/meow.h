@@ -2,7 +2,6 @@
 #define MEOW_H
 
 #include "misc.h"
-#include "types.h"
 #include <assert.h>
 #include <ctype.h>
 #include <dirent.h>
@@ -20,7 +19,4 @@
 
 extern const char* default_dir;
 extern const char* objects_dir;
-extern const char* meow_index;
-int def(FILE* source, FILE* dest, int level);
-int inf(FILE* source, FILE* dest);
 #endif

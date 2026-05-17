@@ -4,7 +4,6 @@
 
 const char* default_dir = "/.meow";
 const char* objects_dir = "/objects";
-const char* meow_index = "/index";
 
 int main(int argc, char** argv) {
     switch (argc) {
@@ -12,9 +11,9 @@ int main(int argc, char** argv) {
             if (!strcmp(argv[1], "init"))
                 meow_init();
             if (!strcmp(argv[1], "dir_traverse"))
-                write_project_dir();
-            if (!strcmp(argv[1], "commit"))
-                puts("Сomment not found");
+                // write_project_dir();
+                if (!strcmp(argv[1], "commit"))
+                    puts("Сomment not found");
             break;
         }
         case 3: {
