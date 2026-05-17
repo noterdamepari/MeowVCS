@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 
 void meow_commit(char* msg) {
@@ -13,6 +14,7 @@ void meow_commit(char* msg) {
     }
     char work_dir[PATH_MAX];
     char path_to_index[PATH_MAX];
+    char path_to_head[PATH_MAX];
     char path_to_cfg[PATH_MAX];
 
     if (find_work_dir(work_dir) == -1) {
@@ -21,6 +23,7 @@ void meow_commit(char* msg) {
     }
     snprintf(path_to_index, PATH_MAX, "%s/index", work_dir);
     snprintf(path_to_cfg, PATH_MAX, "%s/config", work_dir);
+    snprintf(path_to_head, PATH_MAX, "%s/HEAD", work_dir);
 
     FILE* index = fopen(path_to_index, "rb");
     if (!index) {
@@ -46,17 +49,45 @@ void meow_commit(char* msg) {
         fprintf(stderr, "Error: config file not found\n");
         return;
     }
-    printf("\n\nCOMMIT:\n");
+
+    char buffer[256];
+    FILE* head = fopen(path_to_head, "rb");
+    if (!head) {
+        fprintf(stderr, "Error: head not found\n");
+        return;
+    }
+    fgets(buffer, 256, head);
+
+    char parent[41];
+    char on_head = 0; // if we now on HEAD
+    char path_to_branch[256];
+
+    if (!strncmp("ref:", buffer, 4)) {
+        snprintf(path_to_branch, 256, "%s/%s", work_dir, buffer + 5);
+        printf("\n%s\n\n", path_to_branch);
+        FILE* br = fopen(path_to_branch, "rb");
+        if (!br) {
+            puts("Cannot open branch file");
+            return;
+        }
+        on_head = 1;
+        fscanf(br, "%40s", parent);
+        fclose(br);
+    } else {
+        printf("%s\n", buffer);
+    }
+
     fprintf(tmp, "tree %s\n", tree_hash);
     printf("tree %s\n", tree_hash);
-    fprintf(tmp, "parent nil\n"); // TODO: get from .meow/refs/HEAD
-    printf("parent nil\n");
-    char buffer[256];
+
+    fprintf(tmp, "parent %s\n", parent);
+    printf("parent %s\n", parent);
+
     time_t t = time(NULL);
 
     fgets(buffer, 256, cfg);
-    fprintf(tmp, "%s %ld\n\n%s", buffer, t, msg);
-    printf("%s %ld\n\n%s", buffer, t, msg);
+    fprintf(tmp, "author %s %ld\n\n%s", buffer, t, msg);
+    printf("author %s %ld\n\n%s", buffer, t, msg);
 
     fflush(tmp);
     rewind(tmp);
@@ -67,6 +98,17 @@ void meow_commit(char* msg) {
     printf("\n\n");
     char hash[41];
     hash_and_create_obj(COMMIT, &st, tmp, hash);
+
+    if (on_head) {
+        FILE* br = fopen(path_to_branch, "wb");
+        if (!br) {
+            puts("Cannot open branch file");
+            return;
+        }
+        on_head = 1;
+        fprintf(br, "%40s", hash);
+        fclose(br);
+    }
 
     free(entries);
     fclose(index);

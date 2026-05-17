@@ -17,26 +17,18 @@ char meow_init() {
     fprintf(index, "0");
     fclose(index);
 
-    snprintf(path, PATH_MAX, "%s/HEAD", def_path);
-    FILE* head = fopen(path, "wb");
-    if (!head)
-        perror("Cannot create HEAD file");
-    fprintf(head, "nil");
-    fclose(head);
-
     snprintf(path, PATH_MAX, "%s/config", def_path);
     FILE* cfg = fopen(path, "wb");
     if (!cfg)
         perror("Cannot create config file");
 
-    char buffer[255];
+    char username[255];
+    char email[255];
     printf("Your username: ");
-    scanf("%s", buffer);
-    unsigned len = strlen(buffer);
-    buffer[len] = ' ';
+    scanf("%s", username);
     printf("Your email: ");
-    scanf("%s", buffer + len + 1);
-    fprintf(cfg, "%s", buffer);
+    scanf("%s", email);
+    fprintf(cfg, "%s <%s>", username, email);
     puts("Project initialized");
     fclose(cfg);
 
@@ -46,11 +38,19 @@ char meow_init() {
     mkdir(path, 0777);
     snprintf(path, PATH_MAX, "%s/refs/heads", def_path);
     mkdir(path, 0777);
-    snprintf(path, PATH_MAX, "%s/refs/master", def_path);
+
+    snprintf(path, PATH_MAX, "%s/refs/heads/master", def_path);
     FILE* master_branch = fopen(path, "wb");
     if (!master_branch)
         perror("Cannot create branch file");
     fprintf(master_branch, "nil");
     fclose(master_branch);
+
+    snprintf(path, PATH_MAX, "%s/HEAD", def_path);
+    FILE* head = fopen(path, "wb");
+    if (!head)
+        perror("Cannot create HEAD file");
+    fprintf(head, "ref: refs/heads/master");
+    fclose(head);
     return 0;
 }
