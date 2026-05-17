@@ -2,6 +2,7 @@
 #include "meow.h"
 #include "sha1.h"
 #include "zlib.h"
+#include <stdio.h>
 
 static int object_exists(const char* hash) {
     char work_obj_dir[PATH_MAX];
@@ -39,11 +40,13 @@ static void create_object(FILE* f, const char* ihash) {
     const char* obj_file_name = ihash + 2;
     snprintf(path_to_obj, PATH_MAX, "%s/%s", path_to_obj_dir, obj_file_name);
     FILE* obj = fopen(path_to_obj, "wb");
-    if (!obj)
-        assert("Cannot create blob");
+    if (!obj) {
+        printf("Cannot create blob");
+        return;
+    }
     rewind(f); // return cursor
     def(f, obj, Z_DEFAULT_COMPRESSION);
-    printf("object created - %s\n", ihash);
+    LOG("object created - %s\n", ihash);
     fclose(obj);
 }
 
@@ -93,7 +96,7 @@ void hash_and_create_obj(object_type type, struct stat* st, FILE* f, char* ohash
     if (!object_exists(ohash))
         create_object(tmp, ohash);
     else
-        puts("obj already exists");
+        LOG("obj already exists");
 
     fclose(tmp);
 }

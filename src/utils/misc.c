@@ -104,8 +104,10 @@ char create_blob(char* path, char* work_dir, struct stat* st, char* ohash) {
     snprintf(path_to_tempfile, PATH_MAX, "%s/tempfile", work_obj_dir);
 
     FILE* f = fopen(path, "rb");
-    if (!f)
-        assert("Cannot open file");
+    if (!f) {
+        puts("Cannot open file");
+        return 1;
+    }
 
     hash_and_create_obj(BLOB, st, f, ohash);
 
@@ -125,7 +127,7 @@ void write_tree(const indexEntry* entries, const int entries_amt, int path_offse
         if (!slash) {
             // if in root dir
             fprintf(tmp_tree_obj, "100644 blob %s %s\n", entries[i].hash, path);
-            printf("100644 blob %s %s\n", entries[i].hash, path);
+            LOG("100644 blob %s %s\n", entries[i].hash, path);
             i++;
         } else {
             // subdir
@@ -148,7 +150,7 @@ void write_tree(const indexEntry* entries, const int entries_amt, int path_offse
             char hash[41];
             write_tree(entries + start, cnt, path_offset + dirname_len + 1, hash);
             fprintf(tmp_tree_obj, "040000 tree %s %s\n", hash, dirname);
-            printf("040000 tree %s %s\n", hash, dirname);
+            LOG("040000 tree %s %s\n", hash, dirname);
         }
     }
 

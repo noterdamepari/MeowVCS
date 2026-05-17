@@ -96,7 +96,6 @@ void meow_add(char* file) {
         }
     }
 
-    printf("%s\n", rel_path);
     if (!inserted) {
         uint8_t hex_hash[41];
         create_blob(path, work_dir, &st, hex_hash);
@@ -107,6 +106,7 @@ void meow_add(char* file) {
         fprintf(index_tmp, "%s %hhu %lld %s\n", entry.hash, entry.status, entry.mtime, entry.path);
         new_entries_amt++;
     }
+    printf("%s\n", rel_path);
 
     rewind(index_tmp);
     fprintf(index_tmp, "%u\n", new_entries_amt);

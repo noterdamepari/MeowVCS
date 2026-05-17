@@ -1,3 +1,4 @@
+#include "meow.h"
 #include "misc.h"
 #include "object.h"
 #include "types.h"
@@ -33,8 +34,8 @@ void meow_commit(char* msg) {
     int entries_amt;
     fscanf(index, "%d", &entries_amt);
     indexEntry* entries = (indexEntry*)malloc(sizeof(indexEntry) * entries_amt);
-    puts("Index content:");
-    printf("MSG: %s\n", msg);
+    LOG("Index content:");
+    LOG("MSG: %s\n", msg);
     for (int i = 0; i < entries_amt; i++) {
         fscanf(index, "%40s %d %lld %s", entries[i].hash, &entries[i].status, &entries[i].mtime, entries[i].path);
     }
@@ -64,7 +65,7 @@ void meow_commit(char* msg) {
 
     if (!strncmp("ref:", buffer, 4)) {
         snprintf(path_to_branch, 256, "%s/%s", work_dir, buffer + 5);
-        printf("\n%s\n\n", path_to_branch);
+        LOG("\n%s\n\n", path_to_branch);
         FILE* br = fopen(path_to_branch, "rb");
         if (!br) {
             puts("Cannot open branch file");
@@ -74,20 +75,20 @@ void meow_commit(char* msg) {
         fscanf(br, "%40s", parent);
         fclose(br);
     } else {
-        printf("%s\n", buffer);
+        printf("Error: You not on head now");
     }
 
     fprintf(tmp, "tree %s\n", tree_hash);
-    printf("tree %s\n", tree_hash);
+    LOG("tree %s\n", tree_hash);
 
     fprintf(tmp, "parent %s\n", parent);
-    printf("parent %s\n", parent);
+    LOG("parent %s\n", parent);
 
     time_t t = time(NULL);
 
     fgets(buffer, 256, cfg);
     fprintf(tmp, "author %s %ld\n\n%s", buffer, t, msg);
-    printf("author %s %ld\n\n%s", buffer, t, msg);
+    LOG("author %s %ld\n\n%s", buffer, t, msg);
 
     fflush(tmp);
     rewind(tmp);
@@ -95,7 +96,7 @@ void meow_commit(char* msg) {
     int fd = fileno(tmp);
     fstat(fd, &st);
 
-    printf("\n\n");
+    LOG("\n\n");
     char hash[41];
     hash_and_create_obj(COMMIT, &st, tmp, hash);
 
@@ -109,6 +110,8 @@ void meow_commit(char* msg) {
         fprintf(br, "%40s", hash);
         fclose(br);
     }
+    char* branch_name = strrchr(path_to_branch, '/') + 1;
+    printf("[%s %s] %s", hash, branch_name, msg);
 
     free(entries);
     fclose(index);

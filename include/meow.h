@@ -1,6 +1,12 @@
 #ifndef MEOW_H
 #define MEOW_H
 
+#ifdef DEBUG
+#define LOG(fmt, ...) printf("[DEBUG] " fmt "\n", ##__VA_ARGS__)
+#else
+#define LOG(fmt, ...) // Ничего не делаем
+#endif
+
 #include "misc.h"
 #include <assert.h>
 #include <ctype.h>
