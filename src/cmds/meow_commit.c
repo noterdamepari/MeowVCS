@@ -111,8 +111,10 @@ void meow_commit(char* msg) {
         fclose(br);
     }
     char* branch_name = strrchr(path_to_branch, '/') + 1;
-    printf("[%s %s] %s", hash, branch_name, msg);
-
+    if (!strcmp(parent, "nil"))
+        printf("[%s (root-commit) %s] %s", hash, branch_name, msg);
+    else
+        printf("[%s %s] %s", hash, branch_name, msg);
     free(entries);
     fclose(index);
     fclose(cfg);

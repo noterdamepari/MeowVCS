@@ -106,7 +106,7 @@ void meow_add(char* file) {
         fprintf(index_tmp, "%s %hhu %lld %s\n", entry.hash, entry.status, entry.mtime, entry.path);
         new_entries_amt++;
     }
-    printf("%s\n", rel_path);
+    printf("%s added to index\n", rel_path);
 
     rewind(index_tmp);
     fprintf(index_tmp, "%u\n", new_entries_amt);
