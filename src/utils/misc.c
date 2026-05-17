@@ -1,6 +1,7 @@
 #include "meow.h"
 #include "object.h"
 #include "types.h"
+#include <stdio.h>
 
 char is_path_absolute(char* path) {
     if (!path || path[0] == '\0')
@@ -133,8 +134,8 @@ void write_tree(const indexEntry* entries, const int entries_amt, int path_offse
 
         if (!slash) {
             // if in root dir
-            fprintf(tmp_tree_obj, "100644 blob %s %s\n", entries[i].hash, path);
-            LOG("100644 blob %s %s\n", entries[i].hash, path);
+            fprintf(tmp_tree_obj, "%o blob %s %s\n", entries[i].mode, entries[i].hash, path);
+            LOG("%o blob %s %s\n", entries[i].mode, entries[i].hash, path);
             i++;
         } else {
             // subdir

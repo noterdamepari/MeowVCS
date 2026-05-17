@@ -12,6 +12,7 @@ typedef enum {
 
 typedef struct {
     uint64_t mtime;
+    int mode;
     char hash[41]; // hash of file
     status status; // 0 - modif, 1 - new, 2 - deleted
     char path[PATH_MAX];

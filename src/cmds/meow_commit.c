@@ -37,7 +37,7 @@ void meow_commit(char* msg) {
     LOG("Index content:");
     LOG("MSG: %s\n", msg);
     for (int i = 0; i < entries_amt; i++) {
-        fscanf(index, "%40s %d %ld %s", entries[i].hash, &entries[i].status, &entries[i].mtime, entries[i].path);
+        fscanf(index, "%40s %o %d %ld %s", entries[i].hash, &entries[i].mode, &entries[i].status, &entries[i].mtime, entries[i].path);
     }
 
     char tree_hash[41];
