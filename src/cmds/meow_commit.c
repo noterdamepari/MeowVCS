@@ -60,21 +60,21 @@ void meow_commit(char* msg) {
         exit(EXIT_FAILURE);
     }
 
-    char buffer[256];
+    char buffer[PATH_MAX];
     FILE* head = fopen(path_to_head, "rb");
     if (!head) {
         fprintf(stderr, "Error: head not found\n");
         exit(EXIT_FAILURE);
     }
 
-    fgets(buffer, 256, head);
+    fgets(buffer, PATH_MAX, head);
 
     char parent[41];
     char on_head = 0; // if we now on HEAD
-    char path_to_branch[256];
+    char path_to_branch[PATH_MAX];
 
     if (!strncmp("ref:", buffer, 4)) {
-        snprintf(path_to_branch, 256, "%s/%s", work_dir, buffer + 5);
+        snprintf(path_to_branch, PATH_MAX, "%s/%s", work_dir, buffer + 5);
         LOG("%s\n\n", path_to_branch);
         FILE* br = fopen(path_to_branch, "rb");
         if (!br) {
@@ -96,7 +96,7 @@ void meow_commit(char* msg) {
 
     time_t t = time(NULL);
 
-    fgets(buffer, 256, cfg);
+    fgets(buffer, PATH_MAX, cfg);
     fprintf(tmp, "author %s %ld\n\n%s", buffer, t, msg);
     LOG("author %s %ld\n\n%s\n\n", buffer, t, msg);
 
