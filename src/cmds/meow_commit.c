@@ -130,14 +130,13 @@ void meow_commit(char* msg) {
         entries[i].sstatus = COMMITED;
         fwrite(entries + i, sizeof(indexMeta), 1, new_index);
         fwrite(entries_paths[i], sizeof(char), entries[i].path_len + 1, new_index);
-        // fprintf(index, "%40s %o %d %d %ld %s\n", entries[i].hash, entries[i].mode, entries[i].fstatus, entries[i].sstatus, entries[i].mtime, entries[i].path);
+
+        free(entries_paths[i]);
     }
 
     fclose(tmp);
     fclose(new_index);
     free(entries);
-    for (int i = 0; i < entries_amt; i++)
-        free(entries_paths[i]);
     free(entries_paths);
     fclose(cfg);
     fclose(head);
