@@ -1,5 +1,6 @@
 #include "zlib.h"
 #include "meow.h"
+#include <stdio.h>
 
 /* zpipe.c: example of proper use of zlib's inflate() and deflate()
    Not copyrighted -- provided to the public domain

@@ -11,6 +11,8 @@ int main(int argc, char** argv) {
         case 2: {
             if (!strcmp(argv[1], "init"))
                 meow_init();
+            if (!strcmp(argv[1], "status"))
+                meow_status();
             if (!strcmp(argv[1], "commit"))
                 fprintf(stderr, "Error: Сomment not found\n");
             break;
