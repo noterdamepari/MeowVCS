@@ -25,6 +25,8 @@ void get_object_path(char* dest, const char* work_dir, uint8_t* hash) {
 }
 
 int make_path_relative(const char* root, const char* input, char* output) {
+    if (output)
+        output[0] = '\0';
     char res[PATH_MAX];
 
     if (realpath(input, res) == NULL) {
@@ -118,7 +120,7 @@ char create_blob(char* path, char* work_dir, struct stat* st, char* ohash) {
     return 0;
 }
 
-void write_tree(const indexEntry* entries, const int entries_amt, int path_offset, char* ohash) {
+void write_tree(const indexMeta* entries, char** entries_paths, const int entries_amt, int path_offset, char* ohash) {
     FILE* tmp_tree_obj = tmpfile();
     if (!tmp_tree_obj) {
         perror("Error: Cannot create tempfile in write_tree func");
@@ -129,7 +131,7 @@ void write_tree(const indexEntry* entries, const int entries_amt, int path_offse
     while (i < entries_amt) {
         if (entries[i].fstatus == DELETED)
             continue;
-        const char* path = entries[i].path + path_offset;
+        const char* path = entries_paths[i] + path_offset;
         char* slash = strchr(path, '/');
 
         if (!slash) {
@@ -145,7 +147,7 @@ void write_tree(const indexEntry* entries, const int entries_amt, int path_offse
             int start = i;
             int cnt = 0;
             while (i < entries_amt) {
-                path = entries[i].path + path_offset;
+                path = entries_paths[i] + path_offset;
                 if (strchr(path, '/') == NULL)
                     break;
                 char curr_dirname[256];
@@ -156,7 +158,7 @@ void write_tree(const indexEntry* entries, const int entries_amt, int path_offse
                 i++;
             }
             char hash[41];
-            write_tree(entries + start, cnt, path_offset + dirname_len + 1, hash);
+            write_tree(entries + start, entries_paths + start, cnt, path_offset + dirname_len + 1, hash);
             fprintf(tmp_tree_obj, "040000 tree %s %s\n", hash, dirname);
             LOG("040000 tree %s %s\n", hash, dirname);
         }

@@ -1,6 +1,8 @@
 #include "meow.h"
 #include "misc.h"
 #include "types.h"
+#include "zlib.h"
+#include <linux/limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -49,11 +51,13 @@ void meow_add(char* file) {
         exit(EXIT_FAILURE);
     }
 
-    fprintf(index_tmp, "0\n");
-    unsigned int entries_amt;
-    fscanf(index, "%u\n", &entries_amt);
+    unsigned int entries_amt = 0;
+    fwrite(&entries_amt, sizeof(int), 1, index_tmp);
+    fread(&entries_amt, sizeof(int), 1, index);
 
-    indexEntry entry;
+    indexMeta entry;
+    char entry_path[PATH_MAX];
+    memset(&entry, 0, sizeof(indexMeta));
 
     char project_dir[PATH_MAX];
     char rel_path[PATH_MAX];
@@ -64,8 +68,9 @@ void meow_add(char* file) {
     int new_entries_amt = entries_amt;
 
     for (int i = 0; i < entries_amt; i++) {
-        fscanf(index, "%40s %o %hhu %hhu %ld %s", entry.hash, &entry.mode, &entry.fstatus, &entry.sstatus, &entry.mtime, entry.path);
-        char strcmp_res = strcmp(rel_path, entry.path);
+        fread(&entry, sizeof(indexMeta), 1, index);
+        fread(entry_path, sizeof(char), entry.path_len + 1, index);
+        char strcmp_res = strcmp(rel_path, entry_path);
         if (!strcmp_res) { // already in index -> modified
             inserted = 1;
             if (entry.mtime != file_mtime) { // file has been changed
@@ -83,25 +88,31 @@ void meow_add(char* file) {
                 remove(path_to_indextmp);
                 return;
             }
-            fprintf(index_tmp, "%s %o %hhu %hhu %ld %s\n", entry.hash, entry.mode, entry.fstatus, entry.sstatus, entry.mtime, entry.path);
+            fwrite(&entry, sizeof(indexMeta), 1, index_tmp);
+            fwrite(entry_path, sizeof(char), entry.path_len + 1, index_tmp);
         } else if (strcmp_res < 0 && !inserted) {
             inserted = 1;
             new_entries_amt++;
 
             char hash[41];
             create_blob(path, work_dir, &st, hash);
-            indexEntry new_entry;
+            indexMeta new_entry;
+            char new_entry_path[PATH_MAX];
             strcpy(new_entry.hash, hash);
-            strcpy(new_entry.path, rel_path);
+            strcpy(new_entry_path, rel_path);
+            new_entry.path_len = strlen(new_entry_path);
             new_entry.fstatus = NEW;
             new_entry.sstatus = STAGED;
             new_entry.mtime = file_mtime;
             new_entry.mode = file_mode;
-            fprintf(index_tmp, "%s %o %hhu %hhu %ld %s\n", new_entry.hash, new_entry.mode, new_entry.fstatus, new_entry.sstatus, new_entry.mtime, new_entry.path);
+            fwrite(&new_entry, sizeof(indexMeta), 1, index_tmp);
+            fwrite(new_entry_path, sizeof(char), new_entry.path_len + 1, index_tmp);
 
-            fprintf(index_tmp, "%s %o %hhu %hhu %ld %s\n", entry.hash, entry.mode, entry.fstatus, entry.sstatus, entry.mtime, entry.path);
+            fwrite(&entry, sizeof(indexMeta), 1, index_tmp);
+            fwrite(entry_path, sizeof(char), entry.path_len + 1, index_tmp);
         } else {
-            fprintf(index_tmp, "%s %o %hhu %hhu %ld %s\n", entry.hash, entry.mode, entry.fstatus, entry.sstatus, entry.mtime, entry.path);
+            fwrite(&entry, sizeof(indexMeta), 1, index_tmp);
+            fwrite(entry_path, sizeof(char), entry.path_len + 1, index_tmp);
         }
     }
 
@@ -109,18 +120,20 @@ void meow_add(char* file) {
         char hash[41];
         create_blob(path, work_dir, &st, hash);
         strcpy(entry.hash, hash);
-        strcpy(entry.path, rel_path);
+        strcpy(entry_path, rel_path);
+        entry.path_len = strlen(entry_path);
         entry.fstatus = NEW;
         entry.sstatus = STAGED;
         entry.mtime = file_mtime;
         entry.mode = file_mode;
-        fprintf(index_tmp, "%s %o %hhu %hhu %ld %s\n", entry.hash, entry.mode, entry.fstatus, entry.sstatus, entry.mtime, entry.path);
+        fwrite(&entry, sizeof(indexMeta), 1, index_tmp);
+        fwrite(entry_path, sizeof(char), entry.path_len + 1, index_tmp);
         new_entries_amt++;
     }
-    LOG("%s added to index\n with %o mode", rel_path, entry.mode);
+    printf("%s added to index with %o mode", rel_path, entry.mode);
 
     rewind(index_tmp);
-    fprintf(index_tmp, "%u\n", new_entries_amt);
+    fwrite(&new_entries_amt, sizeof(int), 1, index_tmp);
 
     fclose(index_tmp);
     fclose(index);

@@ -2,7 +2,7 @@
 #define MEOW_H
 
 #ifdef DEBUG
-#define LOG(fmt, ...) printf("[DEBUG] " fmt "\n", ##__VA_ARGS__)
+#define LOG(fmt, ...) printf("[DEBUG] " fmt, ##__VA_ARGS__)
 #else
 #define LOG(fmt, ...) // Ничего не делаем
 #endif

@@ -2,6 +2,7 @@
 #include "misc.h"
 #include "object.h"
 #include "types.h"
+#include <linux/limits.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -33,16 +34,23 @@ void meow_commit(char* msg) {
         exit(EXIT_FAILURE);
     }
     int entries_amt;
-    fscanf(index, "%d", &entries_amt);
-    indexEntry* entries = (indexEntry*)malloc(sizeof(indexEntry) * entries_amt);
+    fread(&entries_amt, sizeof(int), 1, index);
+    indexMeta* entries = (indexMeta*)malloc(sizeof(indexMeta) * entries_amt);
+    char** entries_paths = (char**)malloc(sizeof(char*) * entries_amt);
+    for (int i = 0; i < entries_amt; i++) {
+        entries_paths[i] = (char*)malloc(sizeof(char) * PATH_MAX);
+    }
+
     LOG("Index content:");
     LOG("MSG: %s\n", msg);
     for (int i = 0; i < entries_amt; i++) {
-        fscanf(index, "%40s %o %d %d %ld %s", entries[i].hash, &entries[i].mode, &entries[i].fstatus, &entries[i].sstatus, &entries[i].mtime, entries[i].path);
+        fread(entries + i, sizeof(indexMeta), 1, index);
+        fread(entries_paths[i], sizeof(char), entries[i].path_len + 1, index);
+        // fscanf(index, "%40s %o %d %d %ld %s", entries[i].hash, &entries[i].mode, &entries[i].fstatus, &entries[i].sstatus, &entries[i].mtime, entries[i].path);
     }
 
     char tree_hash[41];
-    write_tree(entries, entries_amt, 0, tree_hash);
+    write_tree(entries, entries_paths, entries_amt, 0, tree_hash);
 
     FILE* tmp = tmpfile();
 
@@ -58,6 +66,7 @@ void meow_commit(char* msg) {
         fprintf(stderr, "Error: head not found\n");
         exit(EXIT_FAILURE);
     }
+
     fgets(buffer, 256, head);
 
     char parent[41];
@@ -66,7 +75,7 @@ void meow_commit(char* msg) {
 
     if (!strncmp("ref:", buffer, 4)) {
         snprintf(path_to_branch, 256, "%s/%s", work_dir, buffer + 5);
-        LOG("\n%s\n\n", path_to_branch);
+        LOG("%s\n\n", path_to_branch);
         FILE* br = fopen(path_to_branch, "rb");
         if (!br) {
             fprintf(stderr, "Error: Cannot open branch file\n");
@@ -76,6 +85,7 @@ void meow_commit(char* msg) {
         fclose(br);
     } else {
         fprintf(stderr, "Error: You not on head now\n");
+        exit(EXIT_FAILURE);
     }
 
     fprintf(tmp, "tree %s\n", tree_hash);
@@ -88,12 +98,11 @@ void meow_commit(char* msg) {
 
     fgets(buffer, 256, cfg);
     fprintf(tmp, "author %s %ld\n\n%s", buffer, t, msg);
-    LOG("author %s %ld\n\n%s", buffer, t, msg);
+    LOG("author %s %ld\n\n%s\n\n", buffer, t, msg);
 
     fflush(tmp);
     rewind(tmp);
 
-    LOG("\n\n");
     char hash[41];
     hash_and_create_obj(COMMIT, tmp, hash);
 
@@ -115,13 +124,21 @@ void meow_commit(char* msg) {
     fclose(index);
 
     FILE* new_index = fopen(path_to_index, "wb");
-    fprintf(new_index, "%u\n", entries_amt);
+
+    fwrite(&entries_amt, sizeof(int), 1, new_index);
     for (int i = 0; i < entries_amt; i++) {
         entries[i].sstatus = COMMITED;
-        fprintf(index, "%40s %o %d %d %ld %s\n", entries[i].hash, entries[i].mode, entries[i].fstatus, entries[i].sstatus, entries[i].mtime, entries[i].path);
+        fwrite(entries + i, sizeof(indexMeta), 1, new_index);
+        fwrite(entries_paths[i], sizeof(char), entries[i].path_len + 1, new_index);
+        // fprintf(index, "%40s %o %d %d %ld %s\n", entries[i].hash, entries[i].mode, entries[i].fstatus, entries[i].sstatus, entries[i].mtime, entries[i].path);
     }
 
+    fclose(tmp);
+    fclose(new_index);
     free(entries);
+    for (int i = 0; i < entries_amt; i++)
+        free(entries_paths[i]);
+    free(entries_paths);
     fclose(cfg);
     fclose(head);
 }

@@ -3,6 +3,7 @@
 #include "sha1.h"
 #include "zlib.h"
 #include <stdio.h>
+#include <string.h>
 
 static int object_exists(const char* hash) {
     char work_obj_dir[PATH_MAX];
@@ -65,23 +66,24 @@ void hash_and_create_obj(object_type type, FILE* f, char* ohash) {
 
     char header[64];
     uint32_t h_len;
+    const char* type_str;
+
+    // TODO: make clean
     switch (type) {
         case TREE: {
-            h_len = snprintf(header, sizeof(header), "tree %ld", st.st_size);
+            type_str = "tree";
             break;
         }
         case BLOB: {
-            h_len = snprintf(header, sizeof(header), "blob %ld", st.st_size);
+            type_str = "blob";
             break;
         }
         case COMMIT: {
-            h_len = snprintf(header, sizeof(header), "commit %ld", st.st_size);
-            break;
-        }
-        default: {
+            type_str = "commit";
             break;
         }
     }
+    h_len = snprintf(header, sizeof(header), "%s %ld", type_str, st.st_size);
     h_len++;
 
     SHA1Update(&sha, (uint8_t*)header, h_len); // хешируем хедер дерева
