@@ -1,4 +1,3 @@
-#include "meow.h"
 #include "misc.h"
 #include "types.h"
 #include <linux/limits.h>
@@ -44,6 +43,9 @@ void meow_status() {
         printf("On branch %s\n\n", br_name + 1);
     } else {
         printf("On commit %s\n", buffer);
+        fclose(head);
+        fclose(index);
+        return; // if we in detached head mode all files already commited, nothing to check
     }
 
     int entries_amt = 0;
