@@ -15,14 +15,16 @@ typedef enum {
     COMMITED
 } stage_status;
 
+#pragma pack(push, 1)
 typedef struct {
-    uint64_t mtime;
-    int mode;
-    char hash[41];        // hash of file
-    file_status fstatus;  // 0 - modif, 1 - new, 2 - deleted
-    stage_status sstatus; // 0 - staged, 1 - commited
-    char path[PATH_MAX];
-} indexEntry;
+    uint64_t mtime;       // 8 bytes
+    int path_len;         // 4 bytes
+    int mode;             // 4 bytes
+    file_status fstatus;  // 0 - modif, 1 - new, 2 - deleted 4 bytes
+    stage_status sstatus; // 0 - staged, 1 - commited 4 bytes
+    char hash[41];        // hash of file 41 bytes
+} indexMeta;
+#pragma pack(pop)
 
 typedef struct {
     char name[255];

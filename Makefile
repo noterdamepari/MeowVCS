@@ -11,7 +11,7 @@ TARGET := bin/meow
 
 build: $(TARGET)
 
-dbg: CFLAGS := -O2 -Wall -DDEBUG
+dbg: CFLAGS := -O2 -Wall -DDEBUG -g3
 dbg: build
 
 $(TARGET): $(OBJ)

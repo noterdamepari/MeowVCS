@@ -1,6 +1,7 @@
 #include "cmds.h"
 #include "meow.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 const char* default_dir = "/.meow";
 const char* objects_dir = "/objects";
@@ -10,10 +11,8 @@ int main(int argc, char** argv) {
         case 2: {
             if (!strcmp(argv[1], "init"))
                 meow_init();
-            if (!strcmp(argv[1], "dir_traverse"))
-                // write_project_dir();
-                if (!strcmp(argv[1], "commit"))
-                    fprintf(stderr, "Error: Сomment not found\n");
+            if (!strcmp(argv[1], "commit"))
+                fprintf(stderr, "Error: Сomment not found\n");
             break;
         }
         case 3: {
@@ -25,7 +24,7 @@ int main(int argc, char** argv) {
         }
         default: {
             fprintf(stderr, "Error: No arguments\n");
-            break;
+            exit(EXIT_FAILURE);
         }
     }
     return 0;

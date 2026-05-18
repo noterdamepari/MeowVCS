@@ -17,7 +17,8 @@ char meow_init() {
         perror("Cannot create index");
         exit(EXIT_FAILURE);
     }
-    fprintf(index, "0");
+    int entries_amt = 0;
+    fwrite(&entries_amt, sizeof(int), 1, index);
     fclose(index);
 
     snprintf(path, PATH_MAX, "%s/config", def_path);
@@ -34,7 +35,6 @@ char meow_init() {
     printf("Your email: ");
     scanf("%s", email);
     fprintf(cfg, "%s <%s>", username, email);
-    puts("Project initialized");
     fclose(cfg);
 
     snprintf(path, PATH_MAX, "%s%s", def_path, objects_dir);
@@ -61,5 +61,6 @@ char meow_init() {
     }
     fprintf(head, "ref: refs/heads/master");
     fclose(head);
+    puts("Project initialized");
     return 0;
 }
