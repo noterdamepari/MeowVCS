@@ -28,6 +28,7 @@ void unpack_blob(char* blob_src, char* file_dst, int mode) {
     fscanf(tmp, "%s %ld", type, &size);
     if (strcmp(type, "blob")) {
         fprintf(stderr, "Error: Incorrect blob header");
+        exit(EXIT_FAILURE);
     }
     fgetc(tmp);
     char buffer[CHUNK];
@@ -64,6 +65,7 @@ void unpack_tree(char* tree_hash, char* path_to_tree, char* work_dir) {
         if (!strcmp(entry.type, "tree")) {
             char new_path_to_tree[PATH_MAX];
             snprintf(new_path_to_tree, PATH_MAX, "%s/%s", path_to_tree, entry.name);
+            mkdir(new_path_to_tree, 0777);
             unpack_tree(entry.hash, new_path_to_tree, work_dir);
         } else if (!strcmp(entry.type, "blob")) {
             // TODO: Распакоука
