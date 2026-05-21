@@ -10,7 +10,7 @@
 #include <time.h>
 
 void unpack_blob(char* blob_src, char* file_dst, int mode) {
-    FILE* tmp = tmpfile();
+    FILE* inflated_blob = tmpfile();
     FILE* blob = fopen(blob_src, "rb");
     if (!blob) {
         fprintf(stderr, "Error: Cannot open blob in unpack_blob func %s", blob_src);
@@ -21,22 +21,22 @@ void unpack_blob(char* blob_src, char* file_dst, int mode) {
         fprintf(stderr, "Error: Cannot open file in unpack_blob func %s", file_dst);
         exit(EXIT_FAILURE);
     }
-    inf(blob, tmp);
-    rewind(tmp);
+    inf(blob, inflated_blob);
+    rewind(inflated_blob);
     char type[10];
     size_t size;
-    fscanf(tmp, "%s %ld", type, &size);
+    fscanf(inflated_blob, "%s %ld", type, &size);
     if (strcmp(type, "blob")) {
         fprintf(stderr, "Error: Incorrect blob header");
         exit(EXIT_FAILURE);
     }
-    fgetc(tmp);
+    fgetc(inflated_blob);
     char buffer[CHUNK];
     size_t bytes_read;
-    while ((bytes_read = fread(buffer, sizeof(char), CHUNK, tmp)) > 0) {
+    while ((bytes_read = fread(buffer, sizeof(char), CHUNK, inflated_blob)) > 0) {
         fwrite(buffer, sizeof(char), bytes_read, f);
     }
-    fclose(tmp);
+    fclose(inflated_blob);
     fclose(blob);
     fclose(f);
     if (mode > 0)
@@ -47,21 +47,21 @@ void unpack_tree(char* tree_hash, char* path_to_tree, char* work_dir) {
     char path_to_obj[PATH_MAX];
     snprintf(path_to_obj, PATH_MAX, "%s%s/%.2s/%s", work_dir, objects_dir, tree_hash, tree_hash + 2);
 
-    FILE* tmp = tmpfile();
+    FILE* inflated_tree = tmpfile();
     FILE* tree = fopen(path_to_obj, "rb");
     if (!tree) {
         fprintf(stderr, "Error: required object %s not found", tree_hash);
         exit(EXIT_FAILURE);
     }
-    inf(tree, tmp);
-    rewind(tmp);
+    inf(tree, inflated_tree);
+    rewind(inflated_tree);
 
     TreeEntry entry;
 
-    fscanf(tmp, "%*s %*ld");
-    fgetc(tmp);
+    fscanf(inflated_tree, "%*s %*ld");
+    fgetc(inflated_tree);
 
-    while (fscanf(tmp, "%o %s %s %s", &entry.mode, entry.type, entry.hash, entry.name) == 4) {
+    while (fscanf(inflated_tree, "%o %s %s %s", &entry.mode, entry.type, entry.hash, entry.name) == 4) {
         if (!strcmp(entry.type, "tree")) {
             char new_path_to_tree[PATH_MAX];
             snprintf(new_path_to_tree, PATH_MAX, "%s/%s", path_to_tree, entry.name);
@@ -80,5 +80,5 @@ void unpack_tree(char* tree_hash, char* path_to_tree, char* work_dir) {
         }
     }
     fclose(tree);
-    fclose(tmp);
+    fclose(inflated_tree);
 }
