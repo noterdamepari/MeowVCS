@@ -29,7 +29,8 @@ typedef struct {
 typedef struct {
     char name[255];
     char hash[41];
-    char dir;
+    char type[10];
+    int mode;
 } TreeEntry;
 
 #endif

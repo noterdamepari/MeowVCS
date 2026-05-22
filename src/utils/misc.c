@@ -171,3 +171,26 @@ void write_tree(const indexMeta* entries, char** entries_paths, const int entrie
 
     fclose(tmp_tree_obj);
 }
+
+void get_tree(char* commit, char* tree, char* work_dir) {
+    char path_commit_src[PATH_MAX];
+
+    snprintf(path_commit_src, PATH_MAX, "%s%s/%.2s/%s", work_dir, objects_dir, commit, commit + 2);
+    FILE* commit_src = fopen(path_commit_src, "rb");
+    FILE* inflated_commit_src = tmpfile();
+    inf(commit_src, inflated_commit_src);
+    rewind(inflated_commit_src);
+    fscanf(inflated_commit_src, "%*s %*ld");
+    fgetc(inflated_commit_src);
+    fscanf(inflated_commit_src, "%*s %s", tree);
+    LOG("tree %s\n", tree);
+}
+
+FILE* fopen_inflated(char* path) {
+    FILE* inflated = tmpfile();
+    FILE* f = fopen(path, "rb");
+    inf(f, inflated);
+    rewind(inflated);
+    fclose(f);
+    return inflated;
+}

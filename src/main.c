@@ -24,6 +24,11 @@ int main(int argc, char** argv) {
                 meow_commit(argv[2]);
             break;
         }
+        case 4: {
+            if (!strcmp(argv[1], "diff"))
+                meow_diff(argv[2], argv[3]);
+            break;
+        }
         default: {
             fprintf(stderr, "Error: No arguments\n");
             exit(EXIT_FAILURE);
