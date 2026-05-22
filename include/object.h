@@ -12,4 +12,5 @@ typedef enum {
 int def(FILE* source, FILE* dest, int level);
 int inf(FILE* source, FILE* dest);
 void hash_and_create_obj(object_type type, FILE* f, char* ohash);
+int object_exists(const char* hash);
 #endif

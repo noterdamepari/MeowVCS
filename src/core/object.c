@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 
-static int object_exists(const char* hash) {
+int object_exists(const char* hash) {
     char work_obj_dir[PATH_MAX];
 
     find_work_dir(work_obj_dir);
