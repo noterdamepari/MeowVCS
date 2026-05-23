@@ -2,6 +2,7 @@
 #include "meow.h"
 #include "object.h"
 #include "types.h"
+#include <dirent.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -205,4 +206,13 @@ FILE* fopen_s(char* path, char* modes) {
         exit(EXIT_FAILURE);
     }
     return f;
+}
+
+DIR* opendir_s(char* path) {
+    DIR* d = opendir(path);
+    if (!d) {
+        fprintf(stderr, "Error: cannot open dir %s", path);
+        exit(EXIT_FAILURE);
+    }
+    return d;
 }

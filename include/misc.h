@@ -1,6 +1,7 @@
 #ifndef MISC_H
 #define MISC_H
 #include "types.h"
+#include <dirent.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <sys/stat.h>
@@ -16,4 +17,5 @@ void write_tree(const indexMeta* entries, char** entries_path, const int entries
 void get_tree(char* commit, char* tree, char* work_dir);
 FILE* fopen_inflated(char* path);
 FILE* fopen_s(char* path, char* modes);
+DIR* opendir_s(char* path);
 #endif
