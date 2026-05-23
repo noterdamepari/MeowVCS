@@ -45,8 +45,9 @@ void meow_commit(char* msg) {
     LOG("MSG: %s\n", msg);
     for (int i = 0; i < entries_amt; i++) {
         fread(entries + i, sizeof(indexMeta), 1, index);
-        fread(entries_paths[i], sizeof(char), entries[i].path_len + 1, index);
-        // fscanf(index, "%40s %o %d %d %ld %s", entries[i].hash, &entries[i].mode, &entries[i].fstatus, &entries[i].sstatus, &entries[i].mtime, entries[i].path);
+        fread(entries_paths[i], sizeof(char), entries[i].path_len, index);
+        // fscanf(index, "%40s %o %d %d %ld %s", entries[i].hash, &entries[i].mode,
+        // &entries[i].fstatus, &entries[i].sstatus, &entries[i].mtime, entries[i].path);
     }
 
     char tree_hash[41];
@@ -129,7 +130,7 @@ void meow_commit(char* msg) {
     for (int i = 0; i < entries_amt; i++) {
         entries[i].sstatus = COMMITED;
         fwrite(entries + i, sizeof(indexMeta), 1, new_index);
-        fwrite(entries_paths[i], sizeof(char), entries[i].path_len + 1, new_index);
+        fwrite(entries_paths[i], sizeof(char), entries[i].path_len, new_index);
 
         free(entries_paths[i]);
     }
