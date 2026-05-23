@@ -12,8 +12,9 @@ int main(int argc, char** argv) {
         case 2: {
             if (!strcmp(argv[1], "init"))
                 meow_init();
-            if (!strcmp(argv[1], "log"))
+            if (!strcmp(argv[1], "log")) {
                 meow_log(-1, NULL, NULL);
+            }
             if (!strcmp(argv[1], "status"))
                 meow_status();
             if (!strcmp(argv[1], "commit"))

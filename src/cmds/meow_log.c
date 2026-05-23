@@ -15,6 +15,8 @@ static void print_commit(FILE* stream, CommitEntry* commit) {
 }
 
 int get_commit(char* hash, CommitEntry* out, char* work_dir) {
+    if (!hash || !strcmp(hash, "nil"))
+        return 0;
     char path[PATH_MAX];
     snprintf(path, PATH_MAX, "%s/objects/%.2s/%s", work_dir, hash, hash + 2);
     FILE* commit = fopen_inflated(path);
@@ -56,9 +58,12 @@ void meow_log(int n, char* to, char* from) {
     CommitEntry entry;
 
     // hash1..hash2 situation
-    if (get_commit(from, &entry, work_dir))
-        print_commit(stdout, &entry);
     if (from && to) {
+        if (get_commit(from, &entry, work_dir)) {
+            print_commit(stdout, &entry);
+        } else { // make msg
+            exit(EXIT_FAILURE);
+        }
         LOG("%s %s\n", to, from);
         if (is_ancestor(to, from, work_dir)) {
             while (1) {
