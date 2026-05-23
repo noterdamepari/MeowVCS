@@ -1,3 +1,4 @@
+#include "avl.h"
 #include "meow.h"
 #include "misc.h"
 #include "types.h"
@@ -55,85 +56,65 @@ void meow_add(char* file) {
     fwrite(&entries_amt, sizeof(int), 1, index_tmp);
     fread(&entries_amt, sizeof(int), 1, index);
 
-    indexMeta entry;
-    char entry_path[PATH_MAX];
-    memset(&entry, 0, sizeof(indexMeta));
-
     char project_dir[PATH_MAX];
     char rel_path[PATH_MAX];
     find_project_dir(project_dir, work_dir);
     make_path_relative(project_dir, path, rel_path);
 
+    avlTree* tree = NULL;
     char inserted = 0;
-    int new_entries_amt = entries_amt;
 
+    // index to tree
     for (int i = 0; i < entries_amt; i++) {
-        fread(&entry, sizeof(indexMeta), 1, index);
-        fread(entry_path, sizeof(char), entry.path_len + 1, index);
-        char strcmp_res = strcmp(rel_path, entry_path);
-        if (!strcmp_res) { // already in index -> modified
-            inserted = 1;
-            if (entry.mtime != file_mtime) { // file has been changed
-                char hash[41];
-                create_blob(path, work_dir, &st, hash);
-                entry.fstatus = MODIFIED;
-                entry.sstatus = STAGED;
-                strcpy(entry.hash, hash);
-                entry.mode = file_mode;
-                entry.mtime = file_mtime;
-            } else {
-                puts("Nothing to do, already in index");
-                fclose(index_tmp);
-                fclose(index);
-                remove(path_to_indextmp);
-                return;
-            }
-            fwrite(&entry, sizeof(indexMeta), 1, index_tmp);
-            fwrite(entry_path, sizeof(char), entry.path_len + 1, index_tmp);
-        } else if (strcmp_res < 0 && !inserted) {
-            inserted = 1;
-            new_entries_amt++;
-
-            char hash[41];
-            create_blob(path, work_dir, &st, hash);
-            indexMeta new_entry;
-            char new_entry_path[PATH_MAX];
-            strcpy(new_entry.hash, hash);
-            strcpy(new_entry_path, rel_path);
-            new_entry.path_len = strlen(new_entry_path);
-            new_entry.fstatus = NEW;
-            new_entry.sstatus = STAGED;
-            new_entry.mtime = file_mtime;
-            new_entry.mode = file_mode;
-            fwrite(&new_entry, sizeof(indexMeta), 1, index_tmp);
-            fwrite(new_entry_path, sizeof(char), new_entry.path_len + 1, index_tmp);
-
-            fwrite(&entry, sizeof(indexMeta), 1, index_tmp);
-            fwrite(entry_path, sizeof(char), entry.path_len + 1, index_tmp);
+        IndexTreeEntry tree_entry;
+        memset(&tree_entry, 0, sizeof(IndexTreeEntry));
+        fread(&tree_entry.meta, sizeof(indexMeta), 1, index);
+        fread(tree_entry.path, sizeof(char), tree_entry.meta.path_len, index);
+        if (!tree) {
+            tree = avl_create(tree_entry);
         } else {
-            fwrite(&entry, sizeof(indexMeta), 1, index_tmp);
-            fwrite(entry_path, sizeof(char), entry.path_len + 1, index_tmp);
+            avl_insert(&tree, &tree_entry);
+        }
+    }
+
+    // new entry
+    char hash[41];
+    IndexTreeEntry* entry = avl_find(tree, rel_path);
+    if (entry) {
+        inserted = 1;
+        if (entry->meta.mtime != file_mtime) {
+            create_blob(path, work_dir, &st, hash);
+            entry->meta.fstatus = MODIFIED;
+            entry->meta.sstatus = STAGED;
+            entry->meta.mtime = file_mtime;
+            entry->meta.mode = file_mode;
+            strcpy(entry->meta.hash, hash);
         }
     }
 
     if (!inserted) {
-        char hash[41];
+        IndexTreeEntry new_entry;
+        memset(&new_entry, 0, sizeof(IndexTreeEntry));
         create_blob(path, work_dir, &st, hash);
-        strcpy(entry.hash, hash);
-        strcpy(entry_path, rel_path);
-        entry.path_len = strlen(entry_path);
-        entry.fstatus = NEW;
-        entry.sstatus = STAGED;
-        entry.mtime = file_mtime;
-        entry.mode = file_mode;
-        fwrite(&entry, sizeof(indexMeta), 1, index_tmp);
-        fwrite(entry_path, sizeof(char), entry.path_len + 1, index_tmp);
-        new_entries_amt++;
+        strcpy(new_entry.path, rel_path);
+        strcpy(new_entry.meta.hash, hash);
+        new_entry.meta.path_len = strlen(rel_path) + 1;
+        new_entry.meta.fstatus = NEW;
+        new_entry.meta.sstatus = STAGED;
+        new_entry.meta.mode = file_mode;
+        new_entry.meta.mtime = file_mtime;
+        avl_insert(&tree, &new_entry);
+        entries_amt++;
     }
-    printf("%s added to index with %o mode", rel_path, entry.mode);
+
+    avl_save_to_file(tree, index_tmp);
+
+    avl_del_tree(tree);
+
+    printf("%s added to index with %o mode", rel_path, file_mode);
 
     rewind(index_tmp);
-    fwrite(&new_entries_amt, sizeof(int), 1, index_tmp);
+    fwrite(&entries_amt, sizeof(int), 1, index_tmp);
 
     fclose(index_tmp);
     fclose(index);

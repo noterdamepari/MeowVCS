@@ -56,7 +56,7 @@ void meow_status() {
 
     for (int i = 0; i < entries_amt; i++) {
         fread(&entry, sizeof(indexMeta), 1, index);
-        fread(entry_path, sizeof(char), entry.path_len + 1, index);
+        fread(entry_path, sizeof(char), entry.path_len, index);
         if (entry.sstatus == STAGED) {
             if (!staged_exists) {
                 printf("Staged files:\n");

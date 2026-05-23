@@ -1,13 +1,21 @@
 #ifndef TYPES_H
 #define TYPES_H
 
-#include "object.h"
+#include "time.h"
 #include <limits.h>
+#include <linux/limits.h>
 #include <stdint.h>
 
-typedef enum { MODIFIED, NEW, DELETED } file_status;
+typedef enum {
+    MODIFIED,
+    NEW,
+    DELETED
+} file_status;
 
-typedef enum { STAGED, COMMITED } stage_status;
+typedef enum {
+    STAGED,
+    COMMITED
+} stage_status;
 
 #pragma pack(push, 1)
 typedef struct {
@@ -19,6 +27,11 @@ typedef struct {
     char hash[41];        // hash of file 41 bytes
 } indexMeta;
 #pragma pack(pop)
+
+typedef struct {
+    indexMeta meta;
+    char path[PATH_MAX];
+} IndexTreeEntry;
 
 typedef struct {
     char name[255];
