@@ -1,19 +1,13 @@
 #ifndef TYPES_H
 #define TYPES_H
 
+#include "object.h"
 #include <limits.h>
 #include <stdint.h>
 
-typedef enum {
-    MODIFIED,
-    NEW,
-    DELETED
-} file_status;
+typedef enum { MODIFIED, NEW, DELETED } file_status;
 
-typedef enum {
-    STAGED,
-    COMMITED
-} stage_status;
+typedef enum { STAGED, COMMITED } stage_status;
 
 #pragma pack(push, 1)
 typedef struct {
@@ -32,5 +26,15 @@ typedef struct {
     char type[10];
     int mode;
 } TreeEntry;
+
+typedef struct {
+    time_t time;
+    char hash[41];
+    char tree[41];
+    char parent[41];
+    char user[256];
+    char email[256];
+    char msg[1024];
+} CommitEntry;
 
 #endif

@@ -58,7 +58,7 @@ void line_diff(char* src_hash, char* target_hash, char* work_dir) {
             printf("\tline: %d\t - %s", num1, line1);
         } else if (!ptr1 && ptr2) {
             num2++;
-            printf("\tline :%d\t + %s", num2, line2);
+            printf("\tline: %d\t + %s", num2, line2);
         } else {
             break;
         }
@@ -76,7 +76,8 @@ void tree_diff(char* src_hash, char* target_hash, char* prefix, char* work_dir, 
     char path_src[PATH_MAX];
     char path_target[PATH_MAX];
     snprintf(path_src, PATH_MAX, "%s%s/%.2s/%s", work_dir, objects_dir, src_hash, src_hash + 2);
-    snprintf(path_target, PATH_MAX, "%s%s/%.2s/%s", work_dir, objects_dir, target_hash, target_hash + 2);
+    snprintf(path_target, PATH_MAX, "%s%s/%.2s/%s", work_dir, objects_dir, target_hash,
+             target_hash + 2);
 
     FILE* inflated_src = fopen_inflated(path_src);
     FILE* inflated_target = fopen_inflated(path_target);
@@ -111,7 +112,8 @@ void tree_diff(char* src_hash, char* target_hash, char* prefix, char* work_dir, 
             snprintf(new_prefix, PATH_MAX, "%s/%s", prefix, src_entry.name);
             make_path_relative(project_dir, new_prefix, rel_path);
             if (strcmp(src_entry.type, target_entry.type)) {
-                printf("TYPE CHANGE: %s changed from %s to %s\n", rel_path, src_entry.type, target_entry.type);
+                printf("TYPE CHANGE: %s changed from %s to %s\n", rel_path, src_entry.type,
+                       target_entry.type);
                 printf("DELETED: %s\n", rel_path);
                 printf("ADDED:   %s\n", rel_path);
             } else if (strcmp(src_entry.hash, target_entry.hash)) {
