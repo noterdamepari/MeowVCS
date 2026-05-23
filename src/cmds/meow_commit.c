@@ -41,8 +41,8 @@ void meow_commit(char* msg) {
         entries_paths[i] = (char*)malloc(sizeof(char) * PATH_MAX);
     }
 
-    LOG("Index content:");
     LOG("MSG: %s\n", msg);
+    LOG("Index content:\n");
     for (int i = 0; i < entries_amt; i++) {
         fread(entries + i, sizeof(indexMeta), 1, index);
         fread(entries_paths[i], sizeof(char), entries[i].path_len, index);
