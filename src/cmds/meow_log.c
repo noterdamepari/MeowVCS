@@ -7,38 +7,7 @@
 #include <string.h>
 #include <time.h>
 
-void write_log_rec(FILE* stream, char* commit_hash, char* work_dir) {
-    if (!strcmp(commit_hash, "nil")) {
-        return;
-    }
-    char buffer[1024];
-    char path_to_commit[PATH_MAX];
-    snprintf(path_to_commit, PATH_MAX, "%s/objects/%.2s/%s", work_dir, commit_hash,
-             commit_hash + 2);
-    FILE* commit = fopen_inflated(path_to_commit);
-    fscanf(commit, "%*s %*ld");
-    fgetc(commit);
-    fgets(buffer, 1024, commit);
-    fscanf(commit, "%*s %s", buffer);
-    LOG("parent %s\n", buffer);
-    fgetc(commit); // skip \n
-
-    char user[256];
-    char email[256];
-    time_t time;
-    char message[1024];
-
-    fscanf(commit, "%*s %s %s %ld", user, email, &time);
-    fgetc(commit);
-    fscanf(commit, "%s", message);
-    struct tm* local_t = localtime(&time);
-    fprintf(stream, "* %s\n  %s %s %02d:%02d:%02d %s UTC\n  %s\n\n", commit_hash, user, email,
-            local_t->tm_hour, local_t->tm_min, local_t->tm_sec, local_t->tm_zone, message);
-    fclose(commit);
-    write_log_rec(stream, buffer, work_dir);
-}
-
-void print_commit(FILE* stream, CommitEntry* commit) {
+static void print_commit(FILE* stream, CommitEntry* commit) {
     struct tm* local_t = localtime(&commit->time);
     fprintf(stream, "* %s\n  %s %s %02d:%02d:%02d %s UTC\n  %s\n\n", commit->hash, commit->user,
             commit->email, local_t->tm_hour, local_t->tm_min, local_t->tm_sec, local_t->tm_zone,
@@ -63,7 +32,7 @@ int get_commit(char* hash, CommitEntry* out, char* work_dir) {
     return 1;
 }
 
-int is_ancestor(char* curr, char* parent, char* work_dir) {
+static int is_ancestor(char* curr, char* parent, char* work_dir) {
     char current[41];
     strcpy(current, parent);
     CommitEntry temp;
@@ -85,6 +54,8 @@ void meow_log(int n, char* to, char* from) {
     find_work_dir(work_dir);
 
     CommitEntry entry;
+
+    // hash1..hash2 situation
     if (get_commit(from, &entry, work_dir))
         print_commit(stdout, &entry);
     if (from && to) {
@@ -105,6 +76,7 @@ void meow_log(int n, char* to, char* from) {
         return;
     }
 
+    // mw log without from..to, from current to root while n>0
     char path_to_head[PATH_MAX];
     snprintf(path_to_head, PATH_MAX, "%s/HEAD", work_dir);
     FILE* headfile = fopen(path_to_head, "rb");
