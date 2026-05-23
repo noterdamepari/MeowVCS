@@ -104,7 +104,7 @@ void hash_and_create_obj(object_type type, FILE* f, char* ohash) {
     if (!object_exists(ohash)) {
         create_object(tmp, ohash);
     } else {
-        LOG("obj already exists");
+        LOG("obj already exists\n");
     }
     fclose(tmp);
 }

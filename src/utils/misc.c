@@ -1,7 +1,9 @@
+#include "misc.h"
 #include "meow.h"
 #include "object.h"
 #include "types.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 char is_path_absolute(char* path) {
     if (!path || path[0] == '\0')
@@ -120,7 +122,8 @@ char create_blob(char* path, char* work_dir, struct stat* st, char* ohash) {
     return 0;
 }
 
-void write_tree(const indexMeta* entries, char** entries_paths, const int entries_amt, int path_offset, char* ohash) {
+void write_tree(const indexMeta* entries, char** entries_paths, const int entries_amt,
+                int path_offset, char* ohash) {
     FILE* tmp_tree_obj = tmpfile();
     if (!tmp_tree_obj) {
         perror("Error: Cannot create tempfile in write_tree func");
@@ -158,7 +161,8 @@ void write_tree(const indexMeta* entries, char** entries_paths, const int entrie
                 i++;
             }
             char hash[41];
-            write_tree(entries + start, entries_paths + start, cnt, path_offset + dirname_len + 1, hash);
+            write_tree(entries + start, entries_paths + start, cnt, path_offset + dirname_len + 1,
+                       hash);
             fprintf(tmp_tree_obj, "040000 tree %s %s\n", hash, dirname);
             LOG("040000 tree %s %s\n", hash, dirname);
         }
@@ -176,21 +180,29 @@ void get_tree(char* commit, char* tree, char* work_dir) {
     char path_commit_src[PATH_MAX];
 
     snprintf(path_commit_src, PATH_MAX, "%s%s/%.2s/%s", work_dir, objects_dir, commit, commit + 2);
-    FILE* commit_src = fopen(path_commit_src, "rb");
-    FILE* inflated_commit_src = tmpfile();
-    inf(commit_src, inflated_commit_src);
-    rewind(inflated_commit_src);
+    FILE* inflated_commit_src = fopen_inflated(path_commit_src);
     fscanf(inflated_commit_src, "%*s %*ld");
     fgetc(inflated_commit_src);
     fscanf(inflated_commit_src, "%*s %s", tree);
     LOG("tree %s\n", tree);
+
+    fclose(inflated_commit_src);
 }
 
 FILE* fopen_inflated(char* path) {
     FILE* inflated = tmpfile();
-    FILE* f = fopen(path, "rb");
+    FILE* f = fopen_s(path, "rb");
     inf(f, inflated);
     rewind(inflated);
     fclose(f);
     return inflated;
+}
+
+FILE* fopen_s(char* path, char* modes) {
+    FILE* f = fopen(path, modes);
+    if (!f) {
+        fprintf(stderr, "Error: cannot open file %s", path);
+        exit(EXIT_FAILURE);
+    }
+    return f;
 }
