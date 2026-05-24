@@ -6,8 +6,8 @@
 #include <stdio.h>
 #include <string.h>
 
-void line_diff(char* path, char* rel_path, ProjectContext* p_ctx, TreeEntry* src_ent,
-               TreeEntry* target_ent) {
+static void line_diff(char* path, char* rel_path, ProjectContext* p_ctx, TreeEntry* src_ent,
+                      TreeEntry* target_ent) {
     char obj_path[PATH_MAX];
     snprintf(obj_path, PATH_MAX, "%s/objects/%.2s/%s", p_ctx->work_dir, src_ent->hash,
              src_ent->hash + 2);
@@ -58,16 +58,17 @@ void line_diff(char* path, char* rel_path, ProjectContext* p_ctx, TreeEntry* src
     fclose(target);
 }
 
-void add(char* path, char* rel_path, ProjectContext* p_ctx, TreeEntry* src) {
+static void add(char* path, char* rel_path, ProjectContext* p_ctx, TreeEntry* src) {
+    LOG("%s %s\n", path, rel_path);
     printf("ADDED: %s\n", rel_path);
 }
 
-void deleted(char* path, char* rel_path, ProjectContext* p_ctx, TreeEntry* src) {
+static void deleted(char* path, char* rel_path, ProjectContext* p_ctx, TreeEntry* src) {
     printf("DELETED: %s\n", rel_path);
 }
 
-void typechange(char* path, char* rel_path, ProjectContext* p_ctx, TreeEntry* src,
-                TreeEntry* target) {
+static void typechange(char* path, char* rel_path, ProjectContext* p_ctx, TreeEntry* src,
+                       TreeEntry* target) {
     printf("TYPE CHANGE: %s changed from %s to %s\n", rel_path, src->type, target->type);
     printf("DELETED: %s\n", rel_path);
     printf("ADDED:   %s\n", rel_path);

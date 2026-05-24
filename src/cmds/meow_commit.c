@@ -25,6 +25,12 @@ void meow_commit(char* msg) {
         fprintf(stderr, "Error: .meow/ not found\n");
         exit(EXIT_FAILURE);
     }
+
+    if (is_detached_head(work_dir)) {
+        fprintf(stderr, "Error: You are not on head now");
+        exit(EXIT_FAILURE);
+    }
+
     snprintf(path_to_index, PATH_MAX, "%s/index", work_dir);
     snprintf(path_to_cfg, PATH_MAX, "%s/config", work_dir);
     snprintf(path_to_head, PATH_MAX, "%s/HEAD", work_dir);
@@ -75,7 +81,7 @@ void meow_commit(char* msg) {
     char on_head = 0; // if we now on HEAD
     char path_to_branch[PATH_MAX];
 
-    if (!strncmp("ref:", buffer, 4)) {
+    if (!strncmp("ref: ", buffer, 5)) {
         snprintf(path_to_branch, PATH_MAX, "%s/%s", work_dir, buffer + 5);
         LOG("%s\n\n", path_to_branch);
         FILE* br = fopen(path_to_branch, "rb");

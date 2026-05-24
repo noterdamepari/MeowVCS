@@ -88,7 +88,12 @@ void meow_add(char* file) {
 
     if (find_work_dir(work_dir) == -1) {
         fprintf(stderr, "Error: .meow/ not found\n");
-        return;
+        exit(EXIT_FAILURE);
+    }
+
+    if (is_detached_head(work_dir)) {
+        fprintf(stderr, "Error: You are not on head now");
+        exit(EXIT_FAILURE);
     }
 
     if (!is_path_absolute(file)) {
@@ -121,7 +126,7 @@ void meow_add(char* file) {
         fread(&tree_entry.meta, sizeof(indexMeta), 1, index);
         fread(tree_entry.path, sizeof(char), tree_entry.meta.path_len, index);
         if (!tree) {
-            tree = avl_create(tree_entry);
+            tree = avl_create(&tree_entry);
         } else {
             avl_insert(&tree, &tree_entry);
         }

@@ -9,7 +9,10 @@ char meow_init() {
     getcwd(def_path, PATH_MAX);
 
     strcat(def_path, default_dir);
-    mkdir(def_path, 0777);
+    if (mkdir(def_path, 0777) == -1) {
+        fprintf(stderr, "Error: Repository already exists");
+        exit(EXIT_FAILURE);
+    }
 
     snprintf(path, PATH_MAX, "%s/index", def_path);
     FILE* index = fopen(path, "wb");

@@ -18,7 +18,7 @@ typedef struct {
     int current;
 } stack;
 
-avlTree* avl_create(AVLTYPE value);
+avlTree* avl_create(AVLTYPE* value);
 char avl_insert(avlTree** tree, AVLTYPE* value);
 void avl_del_tree(avlTree* tree);
 void avl_traverse(avlTree* tree);
