@@ -1,10 +1,14 @@
 #include "misc.h"
+#include "avl.h"
 #include "meow.h"
 #include "object.h"
 #include "types.h"
 #include <dirent.h>
+#include <linux/limits.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 char is_path_absolute(char* path) {
     if (!path || path[0] == '\0')
@@ -14,6 +18,25 @@ char is_path_absolute(char* path) {
     if (isalpha(path[0]) && path[1] == ':')
         return 1; // Windows
     return 0;
+}
+
+void get_commit_from_head(char* commit_hash, char* work_dir) {
+    char path_to_head[PATH_MAX];
+    char head[PATH_MAX];
+    snprintf(path_to_head, PATH_MAX, "%s/HEAD", work_dir);
+    FILE* headfile = fopen_s(path_to_head, "rb");
+    fgets(head, PATH_MAX, headfile);
+
+    if (!strncmp("ref: ", head, 5)) {
+        char path_to_br[PATH_MAX];
+        snprintf(path_to_br, PATH_MAX, "%s/%s", work_dir, head + 5);
+        FILE* br = fopen_s(path_to_br, "rb");
+        fscanf(br, "%40s", commit_hash);
+        fclose(br);
+    } else {
+        strcpy(commit_hash, head);
+    }
+    fclose(headfile);
 }
 
 void get_object_path(char* dest, const char* work_dir, uint8_t* hash) {
@@ -28,27 +51,66 @@ void get_object_path(char* dest, const char* work_dir, uint8_t* hash) {
 }
 
 int make_path_relative(const char* root, const char* input, char* output) {
-    if (output)
-        output[0] = '\0';
-    char res[PATH_MAX];
-
-    if (realpath(input, res) == NULL) {
-        return -1;
-    }
-
-    if (strncmp(res, root, strlen(root)) != 0) {
+    if (!root || !input || !output) {
+        if (output)
+            output[0] = '\0';
         return -2;
     }
 
-    const char* relative_ptr = res + strlen(root);
+    if (output)
+        output[0] = '\0';
 
-    if (*relative_ptr == '/') {
-        relative_ptr++;
+    size_t root_len = strlen(root);
+
+    while (root_len > 0 && root[root_len - 1] == '/') {
+        root_len--;
     }
 
-    strcpy(output, relative_ptr);
+    if (strncmp(input, root, root_len) == 0) {
+        const char* relative_ptr = input + root_len;
 
-    return 0;
+        while (*relative_ptr == '/') {
+            relative_ptr++;
+        }
+
+        strcpy(output, relative_ptr);
+        return 0;
+    }
+
+    return -1;
+}
+
+int is_detached_head(const char* work_dir) {
+    char path_to_head[PATH_MAX];
+    snprintf(path_to_head, PATH_MAX, "%s/HEAD", work_dir);
+
+    FILE* head = fopen_s(path_to_head, "rb");
+
+    char buffer[PATH_MAX];
+    fgets(buffer, PATH_MAX, head);
+    fclose(head);
+
+    return strncmp(buffer, "ref: ", 5) != 0;
+}
+
+void rmdir_rec(char* path) {
+    DIR* d = opendir_s(path);
+    struct dirent* ent;
+    struct stat st;
+    while ((ent = readdir(d)) != NULL) {
+        if (strcmp(ent->d_name, ".") == 0 || strcmp(ent->d_name, "..") == 0)
+            continue;
+        char sub_path[PATH_MAX];
+        snprintf(sub_path, PATH_MAX, "%s/%s", path, ent->d_name);
+        stat(sub_path, &st);
+        if (S_ISDIR(st.st_mode)) {
+            rmdir_rec(sub_path);
+        } else {
+            remove(sub_path);
+        }
+    }
+    closedir(d);
+    rmdir(path);
 }
 
 char find_work_dir(char* buffer) {

@@ -27,14 +27,14 @@ static void del_stack(stack* stk) {
     free(stk);
 }
 
-avlTree* avl_create(AVLTYPE value) {
-    size_t path_len = strlen(value.path);
+avlTree* avl_create(AVLTYPE* value) {
+    size_t path_len = strlen(value->path);
     if (path_len > PATH_MAX) {
         fprintf(stderr, "Error: too long file path");
         exit(EXIT_FAILURE);
     }
     avlTree* tmp = (avlTree*)malloc(sizeof(avlTree));
-    tmp->value = value;
+    tmp->value = *value;
     tmp->height = 0;
     tmp->child[0] = NULL;
     tmp->child[1] = NULL;
@@ -115,7 +115,7 @@ char avl_insert(avlTree** tree, AVLTYPE* value) {
             node = &((*node)->child[1]);
         }
     }
-    *node = avl_create(*value);
+    *node = avl_create(value);
     while (stk->current > 0) {
         node = pop(stk);
         height_update(*node);

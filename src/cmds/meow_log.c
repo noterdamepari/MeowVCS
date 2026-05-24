@@ -70,7 +70,7 @@ void meow_log(int n, char* to, char* from) {
                 if (!get_commit(entry.parent, &entry, work_dir)) {
                     break;
                 }
-                if (strcmp(to, entry.parent)) {
+                if (!strcmp(to, entry.parent)) {
                     print_commit(stdout, &entry);
                     break;
                 }
@@ -82,28 +82,13 @@ void meow_log(int n, char* to, char* from) {
     }
 
     // mw log without from..to, from current to root while n>0
-    char path_to_head[PATH_MAX];
-    snprintf(path_to_head, PATH_MAX, "%s/HEAD", work_dir);
-    FILE* headfile = fopen(path_to_head, "rb");
-    char buffer[1024];
-    fgets(buffer, 1024, headfile);
-
     char commit_hash[41];
 
-    if (!strncmp("ref: ", buffer, 5)) {
-        char path_to_br[PATH_MAX];
-        snprintf(path_to_br, PATH_MAX, "%s/%s", work_dir, buffer + 5);
-        FILE* br = fopen(path_to_br, "rb");
-        if (!br) {
-            fprintf(stderr, "Error: branch file not found");
-            exit(EXIT_FAILURE);
-        }
-        fscanf(br, "%40s", commit_hash);
-        fclose(br);
+    if (!from) {
+        get_commit_from_head(commit_hash, work_dir);
     } else {
-        fscanf(headfile, "%40s", commit_hash);
+        strcpy(commit_hash, from);
     }
-    fclose(headfile);
 
     if (!strcmp(commit_hash, "nil")) {
         printf("No commit history");
@@ -120,7 +105,6 @@ void meow_log(int n, char* to, char* from) {
             print_commit(stdout, &entry);
             n--;
         }
-        return;
     } else {
         while (get_commit(entry.parent, &entry, work_dir)) {
             print_commit(stdout, &entry);
