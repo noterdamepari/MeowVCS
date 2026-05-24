@@ -1,6 +1,7 @@
 #include "meow.h"
 #include "misc.h"
 #include "object.h"
+#include "tree.h"
 #include "types.h"
 #include <linux/limits.h>
 #include <stdint.h>

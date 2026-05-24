@@ -13,4 +13,5 @@ int def(FILE* source, FILE* dest, int level);
 int inf(FILE* source, FILE* dest);
 void hash_and_create_obj(object_type type, FILE* f, char* ohash);
 int object_exists(const char* hash);
+char create_blob(char* path, char* work_dir, struct stat* st, char* ohash);
 #endif

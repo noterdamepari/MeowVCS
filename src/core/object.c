@@ -108,3 +108,23 @@ void hash_and_create_obj(object_type type, FILE* f, char* ohash) {
     }
     fclose(tmp);
 }
+
+char create_blob(char* path, char* work_dir, struct stat* st, char* ohash) {
+    char work_obj_dir[PATH_MAX];
+    char path_to_tempfile[PATH_MAX];
+
+    snprintf(work_obj_dir, PATH_MAX, "%s%s", work_dir, objects_dir);
+    snprintf(path_to_tempfile, PATH_MAX, "%s/tempfile", work_obj_dir);
+
+    FILE* f = fopen(path, "rb");
+    if (!f) {
+        puts("Cannot open file");
+        return 1;
+    }
+
+    hash_and_create_obj(BLOB, f, ohash);
+
+    fclose(f);
+    remove(path_to_tempfile);
+    return 0;
+}

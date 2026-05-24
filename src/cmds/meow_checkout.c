@@ -7,6 +7,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+void tree_checkout(char* hash) {
+}
+
 void meow_checkout(char* target) {
     char work_dir[PATH_MAX];
     char project_dir[PATH_MAX];
@@ -22,7 +25,8 @@ void meow_checkout(char* target) {
     FILE* br_file = fopen(path_to_br, "rb");
     if (!br_file) {
         if (strlen(target) != 41) {
-            fprintf(stderr, "Error: pathspec \"%s\" did not match any file(s) known to meow1\n", target);
+            fprintf(stderr, "Error: pathspec \"%s\" did not match any file(s) known to meow1\n",
+                    target);
         }
         strcpy(req_commit_hash, target);
     } else {
@@ -30,10 +34,12 @@ void meow_checkout(char* target) {
         fclose(br_file);
     }
 
-    snprintf(path_to_obj, PATH_MAX, "%s%s/%.2s/%s", work_dir, objects_dir, req_commit_hash, req_commit_hash + 2);
+    snprintf(path_to_obj, PATH_MAX, "%s%s/%.2s/%s", work_dir, objects_dir, req_commit_hash,
+             req_commit_hash + 2);
 
     if (!object_exists(req_commit_hash)) {
-        fprintf(stderr, "Error: pathspec \"%s\" did not match any file(s) known to meow2\n", target);
+        fprintf(stderr, "Error: pathspec \"%s\" did not match any file(s) known to meow2\n",
+                target);
         exit(EXIT_FAILURE);
     }
 
@@ -48,7 +54,7 @@ void meow_checkout(char* target) {
     fscanf(inflated_commit, "%*s %s", tree_hash);
     LOG("tree %s\n", tree_hash);
 
-    unpack_tree(tree_hash, project_dir, work_dir);
+    // unpack_tree(tree_hash, project_dir, work_dir);
 
     fclose(inflated_commit);
     fclose(commit);
