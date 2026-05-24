@@ -145,7 +145,7 @@ void walk_tree_diff(char* src_hash, char* target_hash, char* prefix, ProjectCont
             target_flag = read_tree_entry(inflated_target, &target_entry);
 
             // MODIF OR TYPE
-        } else {
+        } else if (target_flag && src_flag) {
 
             char new_prefix[PATH_MAX];
             snprintf(new_prefix, PATH_MAX, "%s/%s", prefix, src_entry.name);
@@ -153,7 +153,8 @@ void walk_tree_diff(char* src_hash, char* target_hash, char* prefix, ProjectCont
             if (strcmp(src_entry.type, target_entry.type)) {
                 cbs->type_change(new_prefix, rel_path, p_ctx, &src_entry, &target_entry);
 
-            } else if (strcmp(src_entry.hash, target_entry.hash)) {
+            } else if (strcmp(src_entry.hash, target_entry.hash) ||
+                       src_entry.mode != target_entry.mode) {
 
                 if (!strcmp(src_entry.type, "tree")) {
                     walk_tree_diff(src_entry.hash, target_entry.hash, new_prefix, p_ctx, cbs);
