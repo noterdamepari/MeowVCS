@@ -12,9 +12,8 @@ int make_path_relative(const char* root, const char* input, char* output);
 char create_blob(char* path, char* work_dir, struct stat* st, char* hash);
 void get_object_path(char* dest, const char* work_dir, uint8_t* hash);
 // void write_project_dir();
-void write_tree(const indexMeta* entries, char** entries_path, const int entries_amt,
-                int path_offset, char* ohash);
 void get_tree(char* commit, char* tree, char* work_dir);
+void get_msg(char* commit, char* msg, char* work_dir);
 FILE* fopen_inflated(char* path);
 FILE* fopen_s(char* path, char* modes);
 DIR* opendir_s(char* path);

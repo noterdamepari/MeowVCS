@@ -50,4 +50,18 @@ typedef struct {
     char msg[1024];
 } CommitEntry;
 
+typedef struct {
+    char work_dir[PATH_MAX];
+    char project_dir[PATH_MAX];
+} ProjectContext;
+
+typedef struct {
+    void (*delete)(char* path, char* rel_path, ProjectContext* p_ctx, TreeEntry* entry);
+    void (*modif)(char* path, char* rel_path, ProjectContext* p_ctx, TreeEntry* src,
+                  TreeEntry* target);
+    void (*add)(char* path, char* rel_path, ProjectContext* p_ctx, TreeEntry* entry);
+    void (*type_change)(char* path, char* rel_path, ProjectContext* p_ctx, TreeEntry* src,
+                        TreeEntry* target);
+} DiffCallbacks;
+
 #endif

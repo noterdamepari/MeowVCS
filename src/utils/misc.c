@@ -94,89 +94,6 @@ void find_project_dir(char* buffer, char* work_dir) {
     }
 }
 
-static void get_dirname(const char* path, char* dst) {
-    const char* slash = strchr(path, '/');
-    if (slash) {
-        size_t len = slash - path;
-        strncpy(dst, path, len);
-        dst[len] = '\0';
-    }
-}
-
-char create_blob(char* path, char* work_dir, struct stat* st, char* ohash) {
-    char work_obj_dir[PATH_MAX];
-    char path_to_tempfile[PATH_MAX];
-
-    snprintf(work_obj_dir, PATH_MAX, "%s%s", work_dir, objects_dir);
-    snprintf(path_to_tempfile, PATH_MAX, "%s/tempfile", work_obj_dir);
-
-    FILE* f = fopen(path, "rb");
-    if (!f) {
-        puts("Cannot open file");
-        return 1;
-    }
-
-    hash_and_create_obj(BLOB, f, ohash);
-
-    fclose(f);
-    remove(path_to_tempfile);
-    return 0;
-}
-
-void write_tree(const indexMeta* entries, char** entries_paths, const int entries_amt,
-                int path_offset, char* ohash) {
-    FILE* tmp_tree_obj = tmpfile();
-    if (!tmp_tree_obj) {
-        perror("Error: Cannot create tempfile in write_tree func");
-        exit(EXIT_FAILURE);
-    }
-
-    int i = 0;
-    while (i < entries_amt) {
-        if (entries[i].fstatus == DELETED)
-            continue;
-        const char* path = entries_paths[i] + path_offset;
-        const char* slash = strchr(path, '/');
-
-        if (!slash) {
-            // if in root dir
-            fprintf(tmp_tree_obj, "%o blob %s %s\n", entries[i].mode, entries[i].hash, path);
-            LOG("%o blob %s %s\n", entries[i].mode, entries[i].hash, path);
-            i++;
-        } else {
-            // subdir
-            char dirname[256];
-            get_dirname(path, dirname);
-            int dirname_len = strlen(dirname);
-            int start = i;
-            int cnt = 0;
-            while (i < entries_amt) {
-                path = entries_paths[i] + path_offset;
-                if (strchr(path, '/') == NULL)
-                    break;
-                char curr_dirname[256];
-                get_dirname(path, curr_dirname);
-                if (strcmp(dirname, curr_dirname) != 0)
-                    break;
-                cnt++;
-                i++;
-            }
-            char hash[41];
-            write_tree(entries + start, entries_paths + start, cnt, path_offset + dirname_len + 1,
-                       hash);
-            fprintf(tmp_tree_obj, "040000 tree %s %s\n", hash, dirname);
-            LOG("040000 tree %s %s\n", hash, dirname);
-        }
-    }
-
-    fflush(tmp_tree_obj);
-    rewind(tmp_tree_obj);
-
-    hash_and_create_obj(TREE, tmp_tree_obj, ohash);
-
-    fclose(tmp_tree_obj);
-}
-
 void get_tree(char* commit, char* tree, char* work_dir) {
     char path_commit_src[PATH_MAX];
 
@@ -186,6 +103,25 @@ void get_tree(char* commit, char* tree, char* work_dir) {
     fgetc(inflated_commit_src);
     fscanf(inflated_commit_src, "%*s %s", tree);
     LOG("tree %s\n", tree);
+
+    fclose(inflated_commit_src);
+}
+
+void get_msg(char* commit, char* msg, char* work_dir) {
+    char path_commit_src[PATH_MAX];
+
+    snprintf(path_commit_src, PATH_MAX, "%s%s/%.2s/%s", work_dir, objects_dir, commit, commit + 2);
+    FILE* inflated_commit_src = fopen_inflated(path_commit_src);
+    fscanf(inflated_commit_src, "%*s %*ld");
+    fgetc(inflated_commit_src);
+    fscanf(inflated_commit_src, "%*s %*s");
+    fgetc(inflated_commit_src);
+    fscanf(inflated_commit_src, "%*s %*s");
+    fgetc(inflated_commit_src);
+    fscanf(inflated_commit_src, "%*s %*s %*s %*ld");
+    fgetc(inflated_commit_src);
+    fscanf(inflated_commit_src, "%s", msg);
+    LOG("message %s\n", msg);
 
     fclose(inflated_commit_src);
 }
