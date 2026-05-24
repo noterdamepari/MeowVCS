@@ -81,6 +81,7 @@ void tree_diff(char* src_hash, char* target_hash, char* prefix, char* work_dir, 
 
     FILE* inflated_src = fopen_inflated(path_src);
     FILE* inflated_target = fopen_inflated(path_target);
+    printf("%s <- %s\n", src_hash, target_hash);
 
     TreeEntry src_entry;
     TreeEntry target_entry;
