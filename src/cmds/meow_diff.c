@@ -16,6 +16,10 @@ void line_diff(char* path, char* rel_path, ProjectContext* p_ctx, TreeEntry* src
              target_ent->hash + 2);
     FILE* target = fopen_inflated(obj_path);
 
+    if (src_ent->mode != target_ent->mode) {
+        printf("MODE CHANGED: %o -> %o", src_ent->mode, target_ent->mode);
+    }
+
     fscanf(src, "%*s %*ld");
     fgetc(src);
     fscanf(target, "%*s %*ld");

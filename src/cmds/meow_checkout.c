@@ -1,61 +1,50 @@
-#include "meow.h"
 #include "misc.h"
-#include "object.h"
-#include "unpack.h"
+#include "tree.h"
+#include "types.h"
 #include <linux/limits.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
-void tree_checkout(char* hash) {
-}
-
 void meow_checkout(char* target) {
-    char work_dir[PATH_MAX];
-    char project_dir[PATH_MAX];
-    char path_to_br[PATH_MAX];
-    char path_to_obj[PATH_MAX];
-    char path_to_tempfile[PATH_MAX];
-    char req_commit_hash[41];
-    find_work_dir(work_dir);
-    find_project_dir(project_dir, work_dir);
-    snprintf(path_to_br, PATH_MAX, "%s/refs/heads/%s", work_dir, target);
-    snprintf(path_to_tempfile, PATH_MAX, "%s/tempfile", work_dir);
+    ProjectContext p_ctx;
+    find_work_dir(p_ctx.work_dir);
+    find_project_dir(p_ctx.project_dir, p_ctx.work_dir);
+    char path_to_head[PATH_MAX];
+    char commit_hash[41];
+    char curr_hash[41];
+    char target_hash[41];
+    char head[PATH_MAX];
+    snprintf(path_to_head, PATH_MAX, "%s/HEAD", p_ctx.work_dir);
+    FILE* headfile = fopen_s(path_to_head, "rb");
+    fscanf(headfile, "%s", head);
 
-    FILE* br_file = fopen(path_to_br, "rb");
+    if (!strncmp("ref: ", head, 5)) {
+        char path_to_br[PATH_MAX];
+        snprintf(path_to_br, PATH_MAX, "%s/%s", p_ctx.work_dir, head + 5);
+        FILE* br = fopen_s(path_to_br, "rb");
+        fscanf(br, "%40s", commit_hash);
+        fclose(br);
+    } else {
+        strcpy(commit_hash, head);
+    }
+    get_tree(commit_hash, curr_hash, p_ctx.work_dir);
+
+    char target_path_to_br[PATH_MAX];
+    snprintf(target_path_to_br, PATH_MAX, "%s/refs/heads/%s", p_ctx.work_dir, target);
+    FILE* br_file = fopen(target_path_to_br, "rb");
     if (!br_file) {
         if (strlen(target) != 41) {
-            fprintf(stderr, "Error: pathspec \"%s\" did not match any file(s) known to meow1\n",
+            fprintf(stderr, "Error: pathspec \"%s\" did not match any file(s) known to meow\n",
                     target);
         }
-        strcpy(req_commit_hash, target);
+        strcpy(commit_hash, target);
     } else {
-        fscanf(br_file, "%40s", req_commit_hash);
+        fscanf(br_file, "%40s", commit_hash);
         fclose(br_file);
     }
+    get_tree(commit_hash, target_hash, p_ctx.work_dir);
 
-    snprintf(path_to_obj, PATH_MAX, "%s%s/%.2s/%s", work_dir, objects_dir, req_commit_hash,
-             req_commit_hash + 2);
+    DiffCallbacks cbs;
 
-    if (!object_exists(req_commit_hash)) {
-        fprintf(stderr, "Error: pathspec \"%s\" did not match any file(s) known to meow2\n",
-                target);
-        exit(EXIT_FAILURE);
-    }
-
-    FILE* commit = fopen(path_to_obj, "rb");
-
-    FILE* inflated_commit = tmpfile();
-    inf(commit, inflated_commit);
-    rewind(inflated_commit);
-    char tree_hash[41];
-    fscanf(inflated_commit, "%*s %*ld");
-    fgetc(inflated_commit);
-    fscanf(inflated_commit, "%*s %s", tree_hash);
-    LOG("tree %s\n", tree_hash);
-
-    // unpack_tree(tree_hash, project_dir, work_dir);
-
-    fclose(inflated_commit);
-    fclose(commit);
+    walk_tree_diff(curr_hash, target_hash, p_ctx.work_dir, &p_ctx, &cbs);
 }
