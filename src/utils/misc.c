@@ -95,7 +95,7 @@ void find_project_dir(char* buffer, char* work_dir) {
 }
 
 static void get_dirname(const char* path, char* dst) {
-    char* slash = strchr(path, '/');
+    const char* slash = strchr(path, '/');
     if (slash) {
         size_t len = slash - path;
         strncpy(dst, path, len);
@@ -136,7 +136,7 @@ void write_tree(const indexMeta* entries, char** entries_paths, const int entrie
         if (entries[i].fstatus == DELETED)
             continue;
         const char* path = entries_paths[i] + path_offset;
-        char* slash = strchr(path, '/');
+        const char* slash = strchr(path, '/');
 
         if (!slash) {
             // if in root dir

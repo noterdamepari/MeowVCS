@@ -57,7 +57,7 @@ static void add_to_tree_rec(char* path, avlTree** tree, unsigned int* entries_am
                 strcpy(entry->meta.hash, hash);
                 printf("%s added to index with %o mode\n", rel_path, file_mode);
             } else {
-                printf("%s already in index, nothing to do", rel_path);
+                printf("%s already in index, nothing to do\n", rel_path);
             }
         }
 

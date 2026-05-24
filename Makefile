@@ -1,5 +1,5 @@
 CMP := gcc
-CFLAGS := -O2 -Wall
+CFLAGS := -O2
 INCLUDES := -I./include -I./lib/zlib
 
 SRC := $(shell find src -name "*.c")
