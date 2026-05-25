@@ -19,17 +19,16 @@ int main(int argc, char** argv) {
             }
             if (!strcmp(argv[1], "status"))
                 meow_status();
-            if (!strcmp(argv[1], "commit -m"))
-                fprintf(stderr, "Error: Сomment not found\n");
             break;
         }
         case 3: {
+            if (!strcmp(argv[1], "commit") && !strcmp(argv[2], "-m")) {
+                fprintf(stderr, "Error: Сomment not found\n");
+            }
             if (!strcmp(argv[1], "add"))
                 meow_add(argv[2], STAGED);
             if (!strcmp(argv[1], "checkout"))
                 meow_checkout(argv[2]);
-            if (!strcmp(argv[1], "commit -m"))
-                meow_commit(argv[2]);
             if (!strcmp(argv[1], "log")) {
                 char* sep = strchr(argv[2], '.');
                 if (!sep) {
@@ -43,6 +42,14 @@ int main(int argc, char** argv) {
             break;
         }
         case 4: {
+            if (!strcmp(argv[1], "commit")) {
+                if (!strcmp(argv[2], "-m")) {
+                    meow_commit(argv[3]);
+                } else {
+                    fprintf(stderr, "Error: bad usage\n");
+                    exit(EXIT_FAILURE);
+                }
+            }
             if (!strcmp(argv[1], "diff"))
                 meow_diff(argv[2], argv[3]);
             if (!strcmp(argv[1], "log")) {
