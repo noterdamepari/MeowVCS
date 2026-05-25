@@ -67,6 +67,7 @@ static void add_to_tree_rec(char* path, avlTree** tree, unsigned int* entries_am
             exists = 1;
             IndexTreeEntry new_entry;
             memset(&new_entry, 0, sizeof(IndexTreeEntry));
+            create_blob(path, work_dir, &st, hash);
             strcpy(new_entry.path, rel_path);
             strcpy(new_entry.meta.hash, hash);
             new_entry.meta.path_len = strlen(rel_path) + 1;
