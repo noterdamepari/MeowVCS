@@ -59,7 +59,6 @@ static void line_diff(char* path, char* rel_path, ProjectContext* p_ctx, TreeEnt
 }
 
 static void add(char* path, char* rel_path, ProjectContext* p_ctx, TreeEntry* src) {
-    LOG("%s %s\n", path, rel_path);
     printf("ADDED: %s\n", rel_path);
 }
 

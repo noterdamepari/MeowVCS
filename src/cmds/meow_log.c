@@ -29,7 +29,9 @@ int get_commit(char* hash, CommitEntry* out, char* work_dir) {
     fgetc(commit);
     fscanf(commit, "%*s %s %s %ld", out->user, out->email, &out->time);
     fgetc(commit);
-    fscanf(commit, "%s", out->msg);
+    fgetc(commit);
+    fgets(out->msg, 1024, commit);
+    // fscanf(commit, "%s", out->msg);
     fclose(commit);
     return 1;
 }
