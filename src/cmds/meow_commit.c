@@ -16,6 +16,11 @@ void meow_commit(char* msg) {
         fprintf(stderr, "Сomment not found\n");
         exit(EXIT_FAILURE);
     }
+    if (msg[0] == '\"')
+        msg++;
+    int msg_len = strlen(msg);
+    if (msg[msg_len - 1] == '\"')
+        msg[msg_len - 1] = '\0';
     char work_dir[PATH_MAX];
     char path_to_index[PATH_MAX];
     char path_to_head[PATH_MAX];
@@ -53,8 +58,6 @@ void meow_commit(char* msg) {
     for (int i = 0; i < entries_amt; i++) {
         fread(entries + i, sizeof(indexMeta), 1, index);
         fread(entries_paths[i], sizeof(char), entries[i].path_len, index);
-        // fscanf(index, "%40s %o %d %d %ld %s", entries[i].hash, &entries[i].mode,
-        // &entries[i].fstatus, &entries[i].sstatus, &entries[i].mtime, entries[i].path);
     }
 
     char tree_hash[41];

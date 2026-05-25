@@ -66,7 +66,7 @@ int make_path_relative(const char* root, const char* input, char* output) {
         root_len--;
     }
 
-    if (strncmp(input, root, root_len) == 0) {
+    if (!strncmp(input, root, root_len)) {
         const char* relative_ptr = input + root_len;
 
         while (*relative_ptr == '/') {
@@ -182,7 +182,8 @@ void get_msg(char* commit, char* msg, char* work_dir) {
     fgetc(inflated_commit_src);
     fscanf(inflated_commit_src, "%*s %*s %*s %*ld");
     fgetc(inflated_commit_src);
-    fscanf(inflated_commit_src, "%s", msg);
+    fgetc(inflated_commit_src);
+    fgets(msg, 1024, inflated_commit_src);
     LOG("message %s\n", msg);
 
     fclose(inflated_commit_src);

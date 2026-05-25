@@ -10,7 +10,7 @@
 #include <unistd.h>
 
 static void add_to_tree_rec(char* path, avlTree** tree, unsigned int* entries_amt, char* work_dir,
-                            char* project_dir) {
+                            char* project_dir, stage_status status) {
     struct stat st;
     if (stat(path, &st) != 0) {
         fprintf(stderr, "Error: File doesn`t exists\n");
@@ -34,7 +34,7 @@ static void add_to_tree_rec(char* path, avlTree** tree, unsigned int* entries_am
             char sub_path[PATH_MAX];
             snprintf(sub_path, PATH_MAX, "%s/%s", path, ent->d_name);
 
-            add_to_tree_rec(sub_path, tree, entries_amt, work_dir, project_dir);
+            add_to_tree_rec(sub_path, tree, entries_amt, work_dir, project_dir, status);
         }
         closedir(d);
         // file
@@ -51,13 +51,15 @@ static void add_to_tree_rec(char* path, avlTree** tree, unsigned int* entries_am
             if (entry->meta.mtime != file_mtime) {
                 create_blob(path, work_dir, &st, hash);
                 entry->meta.fstatus = MODIFIED;
-                entry->meta.sstatus = STAGED;
+                entry->meta.sstatus = status;
                 entry->meta.mtime = file_mtime;
                 entry->meta.mode = file_mode;
                 strcpy(entry->meta.hash, hash);
-                printf("%s added to index with %o mode\n", rel_path, file_mode);
+                if (status == STAGED)
+                    printf("%s added to index with %o mode\n", rel_path, file_mode);
             } else {
-                printf("%s already in index, nothing to do\n", rel_path);
+                if (status == STAGED)
+                    printf("%s already in index, nothing to do\n", rel_path);
             }
         }
 
@@ -65,26 +67,29 @@ static void add_to_tree_rec(char* path, avlTree** tree, unsigned int* entries_am
             exists = 1;
             IndexTreeEntry new_entry;
             memset(&new_entry, 0, sizeof(IndexTreeEntry));
-            create_blob(path, work_dir, &st, hash);
             strcpy(new_entry.path, rel_path);
             strcpy(new_entry.meta.hash, hash);
             new_entry.meta.path_len = strlen(rel_path) + 1;
             new_entry.meta.fstatus = NEW;
-            new_entry.meta.sstatus = STAGED;
+            new_entry.meta.sstatus = status;
             new_entry.meta.mode = file_mode;
             new_entry.meta.mtime = file_mtime;
             avl_insert(tree, &new_entry);
             (*entries_amt)++;
-            printf("%s added to index with %o mode\n", rel_path, file_mode);
+            if (status == STAGED)
+                printf("%s added to index with %o mode\n", rel_path, file_mode);
         }
     }
 }
 
-void meow_add(char* file) {
+void meow_add(char* file, stage_status status) {
     char work_dir[PATH_MAX];
     char path_to_index[PATH_MAX];
     char path_to_indextmp[PATH_MAX];
     char path[PATH_MAX];
+    int path_len = strlen(file);
+    if (file[path_len - 1] == '/')
+        file[path_len - 1] = '\0';
 
     if (find_work_dir(work_dir) == -1) {
         fprintf(stderr, "Error: .meow/ not found\n");
@@ -132,7 +137,7 @@ void meow_add(char* file) {
         }
     }
 
-    add_to_tree_rec(path, &tree, &entries_amt, work_dir, project_dir);
+    add_to_tree_rec(path, &tree, &entries_amt, work_dir, project_dir, status);
     avl_save_to_file(tree, index_tmp);
     avl_del_tree(tree);
 

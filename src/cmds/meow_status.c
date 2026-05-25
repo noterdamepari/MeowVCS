@@ -49,9 +49,7 @@ void meow_status() {
     }
 
     int entries_amt = 0;
-    printf("%d", entries_amt);
     fread(&entries_amt, sizeof(int), 1, index);
-    printf("%d", entries_amt);
     indexMeta entry;
     char entry_path[PATH_MAX];
     uint8_t staged_exists = 0;
@@ -68,7 +66,7 @@ void meow_status() {
         }
     }
     if (!staged_exists)
-        printf("No staged files");
+        printf("No staged files\n");
 
     fclose(head);
     fclose(index);

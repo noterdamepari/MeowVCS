@@ -3,8 +3,10 @@
 #include "object.h"
 #include "types.h"
 #include <dirent.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 static void get_dirname(const char* path, char* dst) {
@@ -170,4 +172,51 @@ void walk_tree_diff(char* src_hash, char* target_hash, char* prefix, ProjectCont
         fclose(inflated_src);
     if (inflated_target)
         fclose(inflated_target);
+}
+
+int find_obj_in_tree(char* hash, char* rel_path, TreeEntry* out, char* work_dir) {
+    char path_to_tree[PATH_MAX];
+    snprintf(path_to_tree, PATH_MAX, "%s/objects/%.2s/%s", work_dir, hash, hash + 2);
+
+    FILE* inflated_tree = fopen_inflated(path_to_tree);
+
+    fscanf(inflated_tree, "%*s %*ld");
+    fgetc(inflated_tree);
+
+    char* slash = strchr(rel_path, '/');
+    char word[PATH_MAX];
+    char* other = NULL;
+    if (slash) {
+        int len = slash - rel_path;
+        strncpy(word, rel_path, len);
+        word[len] = '\0';
+        other = slash + 1;
+
+        if (*other == '/')
+            other++;
+    } else {
+        strcpy(word, rel_path);
+        other = NULL;
+    }
+
+    TreeEntry entry;
+    int found = 0;
+    while (read_tree_entry(inflated_tree, &entry)) {
+        if (!strcmp(entry.name, word)) {
+            if (other && other[0] != '\0') {
+                if (!strcmp(entry.type, "tree")) {
+                    found = find_obj_in_tree(entry.hash, other, out, work_dir);
+                } else {
+                    // find a file, but other exists
+                    found = 0;
+                }
+            } else {
+                *out = entry;
+                found = 1;
+            }
+            break;
+        }
+    }
+    fclose(inflated_tree);
+    return found;
 }

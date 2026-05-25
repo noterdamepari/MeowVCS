@@ -1,5 +1,6 @@
 #include "cmds.h"
 #include "meow.h"
+#include "types.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -18,16 +19,16 @@ int main(int argc, char** argv) {
             }
             if (!strcmp(argv[1], "status"))
                 meow_status();
-            if (!strcmp(argv[1], "commit"))
+            if (!strcmp(argv[1], "commit -m"))
                 fprintf(stderr, "Error: Сomment not found\n");
             break;
         }
         case 3: {
             if (!strcmp(argv[1], "add"))
-                meow_add(argv[2]);
+                meow_add(argv[2], STAGED);
             if (!strcmp(argv[1], "checkout"))
                 meow_checkout(argv[2]);
-            if (!strcmp(argv[1], "commit"))
+            if (!strcmp(argv[1], "commit -m"))
                 meow_commit(argv[2]);
             if (!strcmp(argv[1], "log")) {
                 char* sep = strchr(argv[2], '.');
@@ -58,6 +59,9 @@ int main(int argc, char** argv) {
                 } else if (!strcmp(argv[3], "--n")) {
                     meow_log(atoi(argv[4]), NULL, argv[2]);
                 }
+            }
+            if (!strcmp(argv[1], "checkout") && !strcmp(argv[3], "--")) {
+                meow_checkout_file(argv[2], argv[4]);
             }
             break;
         }
