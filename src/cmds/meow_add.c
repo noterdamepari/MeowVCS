@@ -97,7 +97,7 @@ void meow_add(char* file, stage_status status) {
         exit(EXIT_FAILURE);
     }
 
-    if (is_detached_head(work_dir)) {
+    if (is_detached_head(work_dir) && status != COMMITED) {
         fprintf(stderr, "Error: You are not on head now");
         exit(EXIT_FAILURE);
     }
