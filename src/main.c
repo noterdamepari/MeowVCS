@@ -42,6 +42,9 @@ int main(int argc, char** argv) {
                     meow_log(-1, argv[2], hash2);
                 }
             }
+            if (!strcmp(argv[1], "branch")) {
+                meow_branch(argv[2]);
+            }
             break;
         }
         case 4: {
