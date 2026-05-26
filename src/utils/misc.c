@@ -1,8 +1,6 @@
 #include "misc.h"
-#include "avl.h"
 #include "meow.h"
 #include "object.h"
-#include "types.h"
 #include <dirent.h>
 #include <linux/limits.h>
 #include <stdio.h>
@@ -93,13 +91,7 @@ int is_detached_head(const char* work_dir) {
     return strncmp(buffer, "ref: ", 5) != 0;
 }
 
-void rmdir_rec(char* path, char* project_dir) {
-    char rel_path[PATH_MAX];
-    make_path_relative(project_dir, path, rel_path);
-    if (strcmp(rel_path, ".meow") == 0 || strcmp(rel_path, "./.meow") == 0 ||
-        strncmp(rel_path, ".meow/", 6) == 0 || strncmp(rel_path, "./.meow/", 8) == 0) {
-        return;
-    }
+void rmdir_rec(char* path) {
     DIR* d = opendir_s(path);
     struct dirent* ent;
     struct stat st;
@@ -110,7 +102,7 @@ void rmdir_rec(char* path, char* project_dir) {
         snprintf(sub_path, PATH_MAX, "%s/%s", path, ent->d_name);
         stat(sub_path, &st);
         if (S_ISDIR(st.st_mode)) {
-            rmdir_rec(sub_path, project_dir);
+            rmdir_rec(sub_path);
         } else {
             remove(sub_path);
         }
