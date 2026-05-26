@@ -22,7 +22,7 @@ avlTree* avl_create(AVLTYPE* value);
 char avl_insert(avlTree** tree, AVLTYPE* value);
 void avl_del_tree(avlTree* tree);
 void avl_traverse(avlTree* tree);
-char avl_erase(avlTree** tree, AVLTYPE value);
+char avl_erase(avlTree** tree, char* path);
 void avl_save_to_file(avlTree* tree, FILE* f);
 IndexTreeEntry* avl_find(avlTree* tree, char* path);
 #endif

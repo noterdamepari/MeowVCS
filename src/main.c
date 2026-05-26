@@ -25,6 +25,9 @@ int main(int argc, char** argv) {
             if (!strcmp(argv[1], "commit") && !strcmp(argv[2], "-m")) {
                 fprintf(stderr, "Error: Сomment not found\n");
             }
+            if (!strcmp(argv[1], "rm")) {
+                meow_rm(argv[2], NO_CACHED);
+            }
             if (!strcmp(argv[1], "add"))
                 meow_add(argv[2], STAGED);
             if (!strcmp(argv[1], "checkout"))
@@ -49,6 +52,9 @@ int main(int argc, char** argv) {
                     fprintf(stderr, "Error: bad usage\n");
                     exit(EXIT_FAILURE);
                 }
+            }
+            if (!strcmp(argv[1], "rm") && !strcmp(argv[2], "--cached")) {
+                meow_rm(argv[3], CACHED);
             }
             if (!strcmp(argv[1], "diff"))
                 meow_diff(argv[2], argv[3]);
