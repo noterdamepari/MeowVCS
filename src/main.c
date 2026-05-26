@@ -19,6 +19,8 @@ int main(int argc, char** argv) {
             }
             if (!strcmp(argv[1], "status"))
                 meow_status();
+            if (!strcmp(argv[1], "branch"))
+                get_branches();
             break;
         }
         case 3: {

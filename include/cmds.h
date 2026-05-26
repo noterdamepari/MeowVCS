@@ -12,4 +12,5 @@ void meow_checkout(char* target);
 void meow_checkout_file(char* target, char* path);
 void meow_rm(char* file, rm_option opt);
 void meow_branch(char* name);
+void get_branches();
 #endif

@@ -1,5 +1,7 @@
 #include "meow.h"
 #include "misc.h"
+#include "types.h"
+#include <dirent.h>
 #include <linux/limits.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,6 +17,7 @@ void meow_branch(char* name) {
 
     snprintf(path_to_head, PATH_MAX, "%s/HEAD", work_dir);
     snprintf(path_to_branch, PATH_MAX, "%s/refs/heads/%s", work_dir, name);
+
     struct stat st;
     if (stat(path_to_branch, &st) == 0) {
         fprintf(stderr, "Error: branch with this name already exists\n");
@@ -29,4 +32,50 @@ void meow_branch(char* name) {
     FILE* wheadfile = fopen_s(path_to_head, "wb");
     fprintf(wheadfile, "ref: refs/heads/%s", name);
     fclose(wheadfile);
+}
+
+static void list_branches(char* path, char* active_br, ProjectContext* p_ctx) {
+    DIR* d = opendir_s(path);
+    struct dirent* ent;
+    struct stat st;
+    while ((ent = readdir(d)) != NULL) {
+        if (strcmp(ent->d_name, ".") == 0 || strcmp(ent->d_name, "..") == 0)
+            continue;
+        char sub_path[PATH_MAX];
+        snprintf(sub_path, PATH_MAX, "%s/%s", path, ent->d_name);
+        stat(sub_path, &st);
+        if (S_ISDIR(st.st_mode)) {
+            list_branches(sub_path, active_br, p_ctx);
+        } else {
+            char rel_path[PATH_MAX];
+            make_path_relative(p_ctx->project_dir, sub_path, rel_path);
+            if (active_br && !strcmp(active_br, rel_path)) {
+                printf("* %s\n", rel_path);
+            } else {
+                printf("  %s\n", rel_path);
+            }
+        }
+    }
+    closedir(d);
+}
+
+void get_branches() {
+    ProjectContext p_ctx;
+    find_work_dir(p_ctx.work_dir);
+    char path_to_head[PATH_MAX];
+    char active_br[PATH_MAX];
+    snprintf(p_ctx.project_dir, PATH_MAX, "%s/refs/heads", p_ctx.work_dir);
+    snprintf(path_to_head, PATH_MAX, "%s/HEAD", p_ctx.work_dir);
+
+    FILE* headfile = fopen_s(path_to_head, "rb");
+    char buffer[1024];
+    fgets(buffer, 1024, headfile);
+    if (!strncmp("ref: ", buffer, 5)) {
+        strcpy(active_br, buffer + 16);
+        LOG("%s\n", active_br);
+        list_branches(p_ctx.project_dir, active_br, &p_ctx);
+    } else {
+        list_branches(p_ctx.project_dir, NULL, &p_ctx);
+    }
+    fclose(headfile);
 }
