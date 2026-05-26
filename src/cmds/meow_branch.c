@@ -2,7 +2,9 @@
 #include "misc.h"
 #include <linux/limits.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 
 void meow_branch(char* name) {
     char work_dir[PATH_MAX];
@@ -13,6 +15,11 @@ void meow_branch(char* name) {
 
     snprintf(path_to_head, PATH_MAX, "%s/HEAD", work_dir);
     snprintf(path_to_branch, PATH_MAX, "%s/refs/heads/%s", work_dir, name);
+    struct stat st;
+    if (stat(path_to_branch, &st) == 0) {
+        fprintf(stderr, "Error: branch with this name already exists\n");
+        exit(EXIT_FAILURE);
+    }
     FILE* rheadfile = fopen_s(path_to_head, "rb");
     char buffer[1024];
     fgets(buffer, 1024, rheadfile);
