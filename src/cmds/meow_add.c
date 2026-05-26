@@ -14,7 +14,7 @@ static void add_to_tree_rec(char* path, avlTree** tree, unsigned int* entries_am
 
     char rel_path[PATH_MAX];
     make_path_relative(project_dir, path, rel_path);
-    if (!strcmp(rel_path, ".meow")) {
+    if (!strncmp(rel_path, ".meow", 5)) {
         return;
     }
 
@@ -30,7 +30,8 @@ static void add_to_tree_rec(char* path, avlTree** tree, unsigned int* entries_am
         DIR* d = opendir_s(path);
         struct dirent* ent;
         while ((ent = readdir(d)) != NULL) {
-            if (strcmp(ent->d_name, ".") == 0 || strcmp(ent->d_name, "..") == 0)
+            if (!strcmp(ent->d_name, ".") || !strcmp(ent->d_name, "..") ||
+                !strcmp(ent->d_name, ".meow"))
                 continue;
             char sub_path[PATH_MAX];
             snprintf(sub_path, PATH_MAX, "%s/%s", path, ent->d_name);
