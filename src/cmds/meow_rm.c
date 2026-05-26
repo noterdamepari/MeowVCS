@@ -37,8 +37,12 @@ static void rm_rec(avlTree** index, char* path, rm_option opt, int* entries_amt,
         if (opt == NO_CACHED)
             rmdir(path);
     } else if (S_ISREG(st.st_mode)) {
-        avl_erase(index, rel_path);
-        (*entries_amt)--;
+        if (index && *index && avl_find(*index, rel_path)) {
+            avl_erase(index, rel_path);
+            (*entries_amt)--;
+        } else {
+            fprintf(stderr, "Error: file %s not found in index\n", rel_path);
+        }
         if (opt == NO_CACHED)
             remove(path);
     }

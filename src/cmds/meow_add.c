@@ -11,16 +11,17 @@
 
 static void add_to_tree_rec(char* path, avlTree** tree, unsigned int* entries_amt, char* work_dir,
                             char* project_dir, stage_status status) {
-    struct stat st;
-    if (stat(path, &st) != 0) {
-        fprintf(stderr, "Error: File doesn`t exists\n");
-        exit(EXIT_FAILURE);
-    }
 
     char rel_path[PATH_MAX];
     make_path_relative(project_dir, path, rel_path);
-
     if (!strcmp(rel_path, ".meow")) {
+        return;
+    }
+
+    struct stat st;
+    if (stat(path, &st) != 0) {
+        fprintf(stderr, "Warning: File '%s' was deleted or is inaccessible during execution\n",
+                rel_path);
         return;
     }
 
@@ -108,6 +109,12 @@ void meow_add(char* file, stage_status status) {
         strcat(path, file);
     } else {
         strcpy(path, file);
+    }
+
+    struct stat st;
+    if (stat(path, &st) != 0) {
+        fprintf(stderr, "Error: File doesn`t exists\n");
+        return;
     }
 
     snprintf(path_to_index, PATH_MAX, "%s/index", work_dir);
