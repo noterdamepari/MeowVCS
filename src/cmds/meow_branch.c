@@ -18,6 +18,7 @@ void meow_branch(char* name) {
     snprintf(path_to_head, PATH_MAX, "%s/HEAD", work_dir);
     snprintf(path_to_branch, PATH_MAX, "%s/refs/heads/%s", work_dir, name);
 
+    LOG("1\n");
     struct stat st;
     if (stat(path_to_branch, &st) == 0) {
         fprintf(stderr, "Error: branch with this name already exists\n");
@@ -25,6 +26,18 @@ void meow_branch(char* name) {
     }
 
     get_commit_from_head(commit_hash, work_dir);
+
+    LOG("1\n");
+    char* slash = strchr(name, '/');
+    while (slash) {
+        *slash = '\0';
+        char path_to_new_dir[PATH_MAX];
+        snprintf(path_to_new_dir, PATH_MAX, "%s/refs/heads/%s", work_dir, name);
+        LOG("%s\n", path_to_new_dir);
+        mkdir(path_to_new_dir, 0777);
+        *slash = '/';
+        slash = strchr(slash + 1, '/');
+    }
 
     FILE* new_branch = fopen_s(path_to_branch, "wb");
     fprintf(new_branch, "%s", commit_hash);
