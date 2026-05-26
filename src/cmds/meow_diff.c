@@ -1,4 +1,3 @@
-#include "meow.h"
 #include "misc.h"
 #include "tree.h"
 #include "types.h"
@@ -73,26 +72,32 @@ static void typechange(char* path, char* rel_path, ProjectContext* p_ctx, TreeEn
     printf("ADDED:   %s\n", rel_path);
 }
 
-void meow_diff(char* source_commit, char* target_commit) {
+void meow_diff(char* source, char* target) {
+    char src_hash[41];
+    char target_hash[41];
     char src_tree[41];
     char target_tree[41];
     char src_msg[1024];
     char target_msg[1024];
     ProjectContext p_ctx;
 
-    DiffCallbacks cbs;
-    cbs.modif = line_diff;
-    cbs.add = add;
-    cbs.delete = deleted;
-    cbs.type_change = typechange;
-
     find_work_dir(p_ctx.work_dir);
     find_project_dir(p_ctx.project_dir, p_ctx.work_dir);
 
-    get_tree(source_commit, src_tree, p_ctx.work_dir);
-    get_tree(target_commit, target_tree, p_ctx.work_dir);
-    get_msg(source_commit, src_msg, p_ctx.work_dir);
-    get_msg(target_commit, target_msg, p_ctx.work_dir);
+    get_commit_from_link(src_hash, source, p_ctx.work_dir);
+    get_commit_from_link(target_hash, target, p_ctx.work_dir);
+
+    DiffCallbacks cbs = {
+        .add = add,
+        .delete = deleted,
+        .modif = line_diff,
+        .type_change = typechange,
+    };
+
+    get_tree(src_hash, src_tree, p_ctx.work_dir);
+    get_tree(target_hash, target_tree, p_ctx.work_dir);
+    get_msg(src_hash, src_msg, p_ctx.work_dir);
+    get_msg(target_hash, target_msg, p_ctx.work_dir);
     printf("%s -> %s\n\n", src_msg, target_msg);
 
     walk_tree_diff(src_tree, target_tree, p_ctx.project_dir, &p_ctx, &cbs);

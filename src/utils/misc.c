@@ -18,6 +18,22 @@ char is_path_absolute(char* path) {
     return 0;
 }
 
+void get_commit_from_link(char* commit_hash, char* link, char* work_dir) {
+    char target_path_to_br[PATH_MAX];
+    snprintf(target_path_to_br, PATH_MAX, "%s/refs/heads/%s", work_dir, link);
+    FILE* br_file = fopen(target_path_to_br, "rb");
+    if (!br_file) {
+        if (strlen(link) != 40) {
+            fprintf(stderr, "Error: pathspec \"%s\" did not match any file(s) known to meow\n",
+                    link);
+        }
+        strcpy(commit_hash, link);
+    } else {
+        fscanf(br_file, "%40s", commit_hash);
+        fclose(br_file);
+    }
+}
+
 void get_commit_from_head(char* commit_hash, char* work_dir) {
     char path_to_head[PATH_MAX];
     char head[PATH_MAX];
