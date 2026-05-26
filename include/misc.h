@@ -16,7 +16,7 @@ void get_msg(char* commit, char* msg, char* work_dir);
 FILE* fopen_inflated(char* path);
 FILE* fopen_s(char* path, char* modes);
 DIR* opendir_s(char* path);
-void rmdir_rec(char* path, char* project_dir);
+void rmdir_rec(char* path);
 void get_commit_from_head(char* commit_hash, char* work_dir);
 int is_detached_head(const char* work_dir);
 #endif
