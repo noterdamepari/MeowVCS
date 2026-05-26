@@ -20,20 +20,9 @@ void meow_branch(char* name) {
         fprintf(stderr, "Error: branch with this name already exists\n");
         exit(EXIT_FAILURE);
     }
-    FILE* rheadfile = fopen_s(path_to_head, "rb");
-    char buffer[1024];
-    fgets(buffer, 1024, rheadfile);
-    fclose(rheadfile);
 
-    if (!strncmp("ref: ", buffer, 5)) {
-        char path_to_current_branch[PATH_MAX];
-        snprintf(path_to_current_branch, PATH_MAX, "%s/%s", work_dir, buffer + 5);
-        FILE* curr_br = fopen_s(path_to_current_branch, "rb");
-        fgets(buffer, 1024, curr_br);
-        fclose(curr_br);
-    }
-    strcpy(commit_hash, buffer);
-    LOG("%s", commit_hash);
+    get_commit_from_head(commit_hash, work_dir);
+
     FILE* new_branch = fopen_s(path_to_branch, "wb");
     fprintf(new_branch, "%s", commit_hash);
     fclose(new_branch);
