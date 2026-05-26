@@ -125,11 +125,11 @@ char avl_insert(avlTree** tree, AVLTYPE* value) {
     return 0;
 }
 
-char avl_erase(avlTree** tree, AVLTYPE value) {
+char avl_erase(avlTree** tree, char* path) {
     avlTree** node = tree;
     stack* stk = init_stack(64);
     while (*node) {
-        if (strcmp(value.path, (*node)->value.path) == 0) {
+        if (strcmp(path, (*node)->value.path) == 0) {
             if ((*node)->child[0] == NULL) { // only one child on right side
                 avlTree* tmp = *node;
                 *node = tmp->child[1];
@@ -158,7 +158,7 @@ char avl_erase(avlTree** tree, AVLTYPE value) {
             }
             del_stack(stk);
             return 0; // deleted
-        } else if (strcmp(value.path, (*node)->value.path) < 0) {
+        } else if (strcmp(path, (*node)->value.path) < 0) {
             push(stk, node);
             node = &((*node)->child[0]);
         } else {

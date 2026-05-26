@@ -106,5 +106,43 @@ void update_index_from_tree(char* target_hash, ProjectContext* p_ctx) {
     fclose(index);
 }
 
-void add_to_index(indexMeta* entry, char* entry_path, char* work_dir) {
+avlTree* open_index(char* work_dir, int* entries_amt) {
+    char path_to_index[PATH_MAX];
+    snprintf(path_to_index, PATH_MAX, "%s/index", work_dir);
+    FILE* index = fopen_s(path_to_index, "rb");
+
+    fread(entries_amt, sizeof(int), 1, index);
+
+    avlTree* tree = NULL;
+
+    // index to tree
+    for (int i = 0; i < *entries_amt; i++) {
+        IndexTreeEntry tree_entry;
+        memset(&tree_entry, 0, sizeof(IndexTreeEntry));
+        fread(&tree_entry.meta, sizeof(indexMeta), 1, index);
+        fread(tree_entry.path, sizeof(char), tree_entry.meta.path_len, index);
+        if (!tree) {
+            tree = avl_create(&tree_entry);
+        } else {
+            avl_insert(&tree, &tree_entry);
+        }
+    }
+    fclose(index);
+    return tree;
+}
+
+void save_index(avlTree* idx, char* work_dir, int* entries_amt) {
+    char path_to_index[PATH_MAX];
+    snprintf(path_to_index, PATH_MAX, "%s/index", work_dir);
+    FILE* index = fopen_s(path_to_index, "wb");
+
+    fwrite(entries_amt, sizeof(int), 1, index);
+    if (idx)
+        avl_save_to_file(idx, index);
+    fclose(index);
+}
+
+void close_index(avlTree* idx) {
+    if (idx)
+        avl_del_tree(idx);
 }

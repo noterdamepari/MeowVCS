@@ -10,4 +10,5 @@ void meow_diff(char* source_commit, char* target_commit);
 void meow_log(int n, char* to, char* from);
 void meow_checkout(char* target);
 void meow_checkout_file(char* target, char* path);
+void meow_rm(char* file, rm_option opt);
 #endif

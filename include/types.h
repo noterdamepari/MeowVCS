@@ -17,6 +17,11 @@ typedef enum {
     COMMITED
 } stage_status;
 
+typedef enum {
+    NO_CACHED,
+    CACHED
+} rm_option;
+
 #pragma pack(push, 1)
 typedef struct {
     uint64_t mtime;       // 8 bytes

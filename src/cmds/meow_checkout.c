@@ -46,7 +46,7 @@ static void typechange(char* path, char* rel_path, ProjectContext* p_ctx, TreeEn
     printf("TYPE CHANGE: %s changed from %s to %s\n", rel_path, src->type, target->type);
     printf("DELETED: %s\n", rel_path);
     if (!strcmp(src->type, "tree")) {
-        rmdir_rec(path);
+        rmdir_rec(path, p_ctx->project_dir);
     } else {
         remove(path);
     }
@@ -154,7 +154,7 @@ void meow_checkout_file(char* target, char* path) {
     struct stat st;
     if (stat(abs_path, &st) != 0) {
         if (S_ISDIR(st.st_mode)) {
-            rmdir_rec(abs_path);
+            rmdir_rec(abs_path, p_ctx.project_dir);
         } else {
             remove(abs_path);
         }

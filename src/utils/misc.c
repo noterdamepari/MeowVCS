@@ -93,7 +93,13 @@ int is_detached_head(const char* work_dir) {
     return strncmp(buffer, "ref: ", 5) != 0;
 }
 
-void rmdir_rec(char* path) {
+void rmdir_rec(char* path, char* project_dir) {
+    char rel_path[PATH_MAX];
+    make_path_relative(project_dir, path, rel_path);
+    if (strcmp(rel_path, ".meow") == 0 || strcmp(rel_path, "./.meow") == 0 ||
+        strncmp(rel_path, ".meow/", 6) == 0 || strncmp(rel_path, "./.meow/", 8) == 0) {
+        return;
+    }
     DIR* d = opendir_s(path);
     struct dirent* ent;
     struct stat st;
@@ -104,7 +110,7 @@ void rmdir_rec(char* path) {
         snprintf(sub_path, PATH_MAX, "%s/%s", path, ent->d_name);
         stat(sub_path, &st);
         if (S_ISDIR(st.st_mode)) {
-            rmdir_rec(sub_path);
+            rmdir_rec(sub_path, project_dir);
         } else {
             remove(sub_path);
         }
@@ -143,7 +149,8 @@ char find_work_dir(char* buffer) {
             break;
         }
     }
-    return -1;
+    fprintf(stderr, "Error: .meow/ not found\n");
+    exit(EXIT_FAILURE);
 }
 
 void find_project_dir(char* buffer, char* work_dir) {
