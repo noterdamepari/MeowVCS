@@ -8,7 +8,7 @@
 #include <string.h>
 #include <unistd.h>
 
-static void rm_rec(avlTree** index, char* path, rm_option opt, int* entries_amt,
+static void rm_rec(avlTree** index, char* path, rm_option opt, unsigned int* entries_amt,
                    char* project_dir) {
 
     char rel_path[PATH_MAX];
@@ -74,7 +74,7 @@ void meow_rm(char* file, rm_option opt) {
 
     snprintf(path_to_index, PATH_MAX, "%s/index", p_ctx.work_dir);
 
-    int entries_amt = 0;
+    unsigned int entries_amt = 0;
     avlTree* index = open_index(p_ctx.work_dir, &entries_amt);
     rm_rec(&index, path, opt, &entries_amt, p_ctx.project_dir);
     save_index(index, p_ctx.work_dir, &entries_amt);
