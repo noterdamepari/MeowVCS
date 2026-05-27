@@ -14,16 +14,8 @@ void meow_status() {
     snprintf(path_to_index, PATH_MAX, "%s/index", work_dir);
     snprintf(path_to_head, PATH_MAX, "%s/HEAD", work_dir);
 
-    FILE* index = fopen(path_to_index, "rb");
-    if (!index) {
-        perror("Error: Index not found");
-        exit(EXIT_FAILURE);
-    }
-    FILE* head = fopen(path_to_head, "rb");
-    if (!head) {
-        perror("Error: HEAD file not found");
-        exit(EXIT_FAILURE);
-    }
+    FILE* index = fopen_s(path_to_index, "rb");
+    FILE* head = fopen_s(path_to_head, "rb");
 
     char buffer[PATH_MAX];
 
