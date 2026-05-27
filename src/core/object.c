@@ -3,6 +3,7 @@
 #include "sha1.h"
 #include "zlib.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 int object_exists(const char* hash) {
@@ -22,11 +23,13 @@ int object_exists(const char* hash) {
 }
 
 static void create_object(FILE* f, const char* ihash) {
+    char work_dir[PATH_MAX];
     char work_obj_dir[PATH_MAX];
     char path_to_obj_dir[PATH_MAX];
     char path_to_obj[PATH_MAX];
 
-    find_work_dir(work_obj_dir);
+    find_work_dir(work_dir);
+    snprintf(work_obj_dir, PATH_MAX, "%s/objects", work_dir);
     strcat(work_obj_dir, objects_dir);
 
     char obj_dir_name[3];
@@ -41,8 +44,10 @@ static void create_object(FILE* f, const char* ihash) {
     const char* obj_file_name = ihash + 2;
     snprintf(path_to_obj, PATH_MAX, "%s/%s", path_to_obj_dir, obj_file_name);
     FILE* obj = fopen(path_to_obj, "wb");
-    if (!obj)
-        perror("Error: Cannot create blob");
+    if (!obj) {
+        fprintf(stderr, "Error: Cannot create blob");
+        exit(EXIT_FAILURE);
+    }
     rewind(f); // return cursor
     def(f, obj, Z_DEFAULT_COMPRESSION);
     LOG("object created - %s\n", ihash);
@@ -68,7 +73,6 @@ void hash_and_create_obj(object_type type, FILE* f, char* ohash) {
     uint32_t h_len;
     const char* type_str;
 
-    // TODO: make clean
     switch (type) {
         case TREE: {
             type_str = "tree";
@@ -111,10 +115,7 @@ void hash_and_create_obj(object_type type, FILE* f, char* ohash) {
 
 char create_blob(char* path, char* work_dir, struct stat* st, char* ohash) {
     char work_obj_dir[PATH_MAX];
-    char path_to_tempfile[PATH_MAX];
-
     snprintf(work_obj_dir, PATH_MAX, "%s%s", work_dir, objects_dir);
-    snprintf(path_to_tempfile, PATH_MAX, "%s/tempfile", work_obj_dir);
 
     FILE* f = fopen(path, "rb");
     if (!f) {
@@ -125,6 +126,5 @@ char create_blob(char* path, char* work_dir, struct stat* st, char* ohash) {
     hash_and_create_obj(BLOB, f, ohash);
 
     fclose(f);
-    remove(path_to_tempfile);
     return 0;
 }
