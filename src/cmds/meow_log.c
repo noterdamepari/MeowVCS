@@ -1,3 +1,4 @@
+#include "cfg.h"
 #include "meow.h"
 #include "misc.h"
 #include "types.h"
@@ -30,7 +31,7 @@ int get_commit(char* hash, CommitEntry* out, char* work_dir) {
     fscanf(commit, "%*s %s %s %ld", out->user, out->email, &out->time);
     fgetc(commit);
     fgetc(commit);
-    fgets(out->msg, 1024, commit);
+    fgets(out->msg, MSG_SIZE, commit);
     // fscanf(commit, "%s", out->msg);
     fclose(commit);
     return 1;

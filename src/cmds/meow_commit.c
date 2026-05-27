@@ -1,3 +1,4 @@
+#include "cfg.h"
 #include "meow.h"
 #include "misc.h"
 #include "object.h"
@@ -19,6 +20,11 @@ void meow_commit(char* msg) {
     if (msg[0] == '\"')
         msg++;
     int msg_len = strlen(msg);
+    if (msg_len > MSG_SIZE) {
+        fprintf(stderr, "Error: commit message length exceeds limit");
+        exit(EXIT_FAILURE);
+    }
+
     if (msg[msg_len - 1] == '\"')
         msg[msg_len - 1] = '\0';
     char work_dir[PATH_MAX];

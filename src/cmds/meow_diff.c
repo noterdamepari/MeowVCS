@@ -1,3 +1,4 @@
+#include "cfg.h"
 #include "misc.h"
 #include "tree.h"
 #include "types.h"
@@ -78,7 +79,7 @@ void meow_diff(char* source, char* target) {
     char src_tree[41];
     char target_tree[41];
     char src_msg[1024];
-    char target_msg[1024];
+    char target_msg[MSG_SIZE];
     ProjectContext p_ctx;
 
     find_work_dir(p_ctx.work_dir);

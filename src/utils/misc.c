@@ -1,4 +1,5 @@
 #include "misc.h"
+#include "cfg.h"
 #include "meow.h"
 #include "object.h"
 #include <dirent.h>
@@ -40,10 +41,10 @@ void get_commit_from_link(char* commit_hash, int* status, char* link, char* work
 
 void get_commit_from_head(char* commit_hash, char* work_dir) {
     char path_to_head[PATH_MAX];
-    char head[PATH_MAX];
+    char head[BR_NAME_SIZE + 5];
     snprintf(path_to_head, PATH_MAX, "%s/HEAD", work_dir);
     FILE* headfile = fopen_s(path_to_head, "rb");
-    fgets(head, PATH_MAX, headfile);
+    fgets(head, BR_NAME_SIZE + 5, headfile);
 
     if (!strncmp("ref: ", head, 5)) {
         char path_to_br[PATH_MAX];
@@ -104,8 +105,8 @@ int is_detached_head(const char* work_dir) {
 
     FILE* head = fopen_s(path_to_head, "rb");
 
-    char buffer[PATH_MAX];
-    fgets(buffer, PATH_MAX, head);
+    char buffer[BR_NAME_SIZE + 5];
+    fgets(buffer, BR_NAME_SIZE + 5, head);
     fclose(head);
 
     return strncmp(buffer, "ref: ", 5) != 0;
@@ -202,7 +203,7 @@ void get_msg(char* commit, char* msg, char* work_dir) {
     fscanf(inflated_commit_src, "%*s %*s %*s %*ld");
     fgetc(inflated_commit_src);
     fgetc(inflated_commit_src);
-    fgets(msg, 1024, inflated_commit_src);
+    fgets(msg, MSG_SIZE, inflated_commit_src);
     LOG("message %s\n", msg);
 
     fclose(inflated_commit_src);

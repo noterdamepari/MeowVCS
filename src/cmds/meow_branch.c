@@ -1,3 +1,4 @@
+#include "cfg.h"
 #include "meow.h"
 #include "misc.h"
 #include "types.h"
@@ -9,6 +10,9 @@
 #include <sys/stat.h>
 
 void meow_branch(char* name) {
+    if (strlen(name) > BR_NAME_SIZE) {
+        fprintf(stderr, "Error: branch name length exceeds limit");
+    }
     char work_dir[PATH_MAX];
     char path_to_head[PATH_MAX];
     char path_to_branch[PATH_MAX];
@@ -18,7 +22,6 @@ void meow_branch(char* name) {
     snprintf(path_to_head, PATH_MAX, "%s/HEAD", work_dir);
     snprintf(path_to_branch, PATH_MAX, "%s/refs/heads/%s", work_dir, name);
 
-    LOG("1\n");
     struct stat st;
     if (stat(path_to_branch, &st) == 0) {
         fprintf(stderr, "Error: branch with this name already exists\n");
@@ -27,7 +30,6 @@ void meow_branch(char* name) {
 
     get_commit_from_head(commit_hash, work_dir);
 
-    LOG("1\n");
     char* slash = strchr(name, '/');
     while (slash) {
         *slash = '\0';
@@ -81,8 +83,8 @@ void get_branches() {
     snprintf(path_to_head, PATH_MAX, "%s/HEAD", p_ctx.work_dir);
 
     FILE* headfile = fopen_s(path_to_head, "rb");
-    char buffer[1024];
-    fgets(buffer, 1024, headfile);
+    char buffer[BR_NAME_SIZE + 5];
+    fgets(buffer, BR_NAME_SIZE + 5, headfile);
     if (!strncmp("ref: ", buffer, 5)) {
         strcpy(active_br, buffer + 16);
         LOG("%s\n", active_br);

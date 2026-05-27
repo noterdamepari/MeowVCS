@@ -1,6 +1,7 @@
 #ifndef TYPES_H
 #define TYPES_H
 
+#include "cfg.h"
 #include "time.h"
 #include <limits.h>
 #include <linux/limits.h>
@@ -52,7 +53,7 @@ typedef struct {
     char parent[41];
     char user[256];
     char email[256];
-    char msg[1024];
+    char msg[MSG_SIZE];
 } CommitEntry;
 
 typedef struct {

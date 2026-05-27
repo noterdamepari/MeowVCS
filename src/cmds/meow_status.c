@@ -1,3 +1,4 @@
+#include "cfg.h"
 #include "misc.h"
 #include "types.h"
 #include <linux/limits.h>
@@ -17,9 +18,9 @@ void meow_status() {
     FILE* index = fopen_s(path_to_index, "rb");
     FILE* head = fopen_s(path_to_head, "rb");
 
-    char buffer[PATH_MAX];
+    char buffer[BR_NAME_SIZE + 5];
 
-    fgets(buffer, PATH_MAX, head);
+    fgets(buffer, BR_NAME_SIZE + 5, head);
 
     if (!strncmp("ref: ", buffer, 5)) {
         char* br_name = strchr(buffer, '/');
