@@ -1,4 +1,5 @@
 #include "avl.h"
+#include "index.h"
 #include "misc.h"
 #include "types.h"
 #include <dirent.h>
@@ -124,41 +125,10 @@ void meow_add(char* file, stage_status status) {
     char project_dir[PATH_MAX];
     find_project_dir(project_dir, work_dir);
 
-    FILE* index = fopen_s(path_to_index, "rb");
-    FILE* index_tmp = fopen_s(path_to_indextmp, "wb");
-
     unsigned int entries_amt = 0;
-    fwrite(&entries_amt, sizeof(int), 1, index_tmp);
-    fread(&entries_amt, sizeof(int), 1, index);
+    avlTree* index = open_index(work_dir, &entries_amt);
 
-    avlTree* tree = NULL;
-
-    // index to tree
-    for (int i = 0; i < entries_amt; i++) {
-        IndexTreeEntry tree_entry;
-        memset(&tree_entry, 0, sizeof(IndexTreeEntry));
-        fread(&tree_entry.meta, sizeof(indexMeta), 1, index);
-        fread(tree_entry.path, sizeof(char), tree_entry.meta.path_len, index);
-        if (!tree) {
-            tree = avl_create(&tree_entry);
-        } else {
-            avl_insert(&tree, &tree_entry);
-        }
-    }
-
-    add_to_tree_rec(path, &tree, &entries_amt, work_dir, project_dir, status);
-    avl_save_to_file(tree, index_tmp);
-    avl_del_tree(tree);
-
-    rewind(index_tmp);
-    fwrite(&entries_amt, sizeof(int), 1, index_tmp);
-
-    fclose(index_tmp);
-    fclose(index);
-
-    if (rename(path_to_indextmp, path_to_index) != 0) {
-        perror("Error: rename failed");
-        exit(EXIT_FAILURE);
-        return;
-    }
+    add_to_tree_rec(path, &index, &entries_amt, work_dir, project_dir, status);
+    save_index(index, work_dir, &entries_amt);
+    close_index(index);
 }

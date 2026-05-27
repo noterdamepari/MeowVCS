@@ -106,7 +106,7 @@ void update_index_from_tree(char* target_hash, ProjectContext* p_ctx) {
     fclose(index);
 }
 
-avlTree* open_index(char* work_dir, int* entries_amt) {
+avlTree* open_index(char* work_dir, unsigned int* entries_amt) {
     char path_to_index[PATH_MAX];
     snprintf(path_to_index, PATH_MAX, "%s/index", work_dir);
     FILE* index = fopen_s(path_to_index, "rb");
