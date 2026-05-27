@@ -2,15 +2,17 @@
 #include "meow.h"
 #include "sha1.h"
 #include "zlib.h"
+#include <linux/limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 int object_exists(const char* hash) {
+    char work_dir[PATH_MAX];
     char work_obj_dir[PATH_MAX];
 
-    find_work_dir(work_obj_dir);
-    strcat(work_obj_dir, objects_dir);
+    find_work_dir(work_dir);
+    snprintf(work_obj_dir, PATH_MAX, "%s/objects", work_dir);
     char path[PATH_MAX];
 
     snprintf(path, PATH_MAX, "%s/%.2s/%s", work_obj_dir, hash, hash + 2);
@@ -30,7 +32,6 @@ static void create_object(FILE* f, const char* ihash) {
 
     find_work_dir(work_dir);
     snprintf(work_obj_dir, PATH_MAX, "%s/objects", work_dir);
-    strcat(work_obj_dir, objects_dir);
 
     char obj_dir_name[3];
     for (int i = 0; i < 2; i++) {
@@ -115,13 +116,9 @@ void hash_and_create_obj(object_type type, FILE* f, char* ohash) {
 
 char create_blob(char* path, char* work_dir, struct stat* st, char* ohash) {
     char work_obj_dir[PATH_MAX];
-    snprintf(work_obj_dir, PATH_MAX, "%s%s", work_dir, objects_dir);
+    snprintf(work_obj_dir, PATH_MAX, "%s/objects", work_dir);
 
-    FILE* f = fopen(path, "rb");
-    if (!f) {
-        puts("Cannot open file");
-        return 1;
-    }
+    FILE* f = fopen_s(path, "rb");
 
     hash_and_create_obj(BLOB, f, ohash);
 
