@@ -18,7 +18,7 @@ char is_path_absolute(char* path) {
     return 0;
 }
 
-void get_commit_from_link(char* commit_hash, char* link, char* work_dir) {
+void get_commit_from_link(char* commit_hash, int* status, char* link, char* work_dir) {
     char target_path_to_br[PATH_MAX];
     snprintf(target_path_to_br, PATH_MAX, "%s/refs/heads/%s", work_dir, link);
     FILE* br_file = fopen(target_path_to_br, "rb");
@@ -28,7 +28,11 @@ void get_commit_from_link(char* commit_hash, char* link, char* work_dir) {
                     link);
         }
         strcpy(commit_hash, link);
+        if (status)
+            *status = 0;
     } else {
+        if (status)
+            *status = 1;
         fscanf(br_file, "%40s", commit_hash);
         fclose(br_file);
     }

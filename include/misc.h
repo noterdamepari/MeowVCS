@@ -18,6 +18,6 @@ FILE* fopen_s(char* path, char* modes);
 DIR* opendir_s(char* path);
 void rmdir_rec(char* path);
 void get_commit_from_head(char* commit_hash, char* work_dir);
-void get_commit_from_link(char* commit_hash, char* link, char* work_dir);
+void get_commit_from_link(char* commit_hash, int* status, char* link, char* work_dir);
 int is_detached_head(const char* work_dir);
 #endif

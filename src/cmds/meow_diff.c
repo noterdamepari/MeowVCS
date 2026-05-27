@@ -84,8 +84,8 @@ void meow_diff(char* source, char* target) {
     find_work_dir(p_ctx.work_dir);
     find_project_dir(p_ctx.project_dir, p_ctx.work_dir);
 
-    get_commit_from_link(src_hash, source, p_ctx.work_dir);
-    get_commit_from_link(target_hash, target, p_ctx.work_dir);
+    get_commit_from_link(src_hash, NULL, source, p_ctx.work_dir);
+    get_commit_from_link(target_hash, NULL, target, p_ctx.work_dir);
 
     DiffCallbacks cbs = {
         .add = add,

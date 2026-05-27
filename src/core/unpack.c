@@ -60,7 +60,6 @@ void unpack_tree(char* tree_hash, char* path_to_tree, char* work_dir) {
             mkdir(new_path_to_tree, 0777);
             unpack_tree(entry.hash, new_path_to_tree, work_dir);
         } else if (!strcmp(entry.type, "blob")) {
-            // TODO: Распакоука
             char path_to_blob[PATH_MAX];
             char path_to_file[PATH_MAX];
             snprintf(path_to_blob, PATH_MAX, "%s%s/%.2s/%s", work_dir, objects_dir, entry.hash,

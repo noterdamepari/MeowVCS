@@ -76,21 +76,8 @@ void meow_checkout(char* target) {
     get_commit_from_head(commit_hash, p_ctx.work_dir);
     get_tree(commit_hash, curr_hash, p_ctx.work_dir);
 
-    char target_path_to_br[PATH_MAX];
-    snprintf(target_path_to_br, PATH_MAX, "%s/refs/heads/%s", p_ctx.work_dir, target);
     int checkout_to_br = 0;
-    FILE* br_file = fopen(target_path_to_br, "rb");
-    if (!br_file) {
-        if (strlen(target) != 40) {
-            fprintf(stderr, "Error: pathspec \"%s\" did not match any file(s) known to meow\n",
-                    target);
-        }
-        strcpy(commit_hash, target);
-    } else {
-        fscanf(br_file, "%40s", commit_hash);
-        checkout_to_br = 1;
-        fclose(br_file);
-    }
+    get_commit_from_link(commit_hash, &checkout_to_br, target, p_ctx.work_dir);
     get_tree(commit_hash, target_hash, p_ctx.work_dir);
 
     DiffCallbacks cbs = {
@@ -131,19 +118,7 @@ void meow_checkout_file(char* target, char* path) {
 
     make_path_relative(p_ctx.project_dir, abs_path, rel_path);
 
-    char target_path_to_br[PATH_MAX];
-    snprintf(target_path_to_br, PATH_MAX, "%s/refs/heads/%s", p_ctx.work_dir, target);
-    FILE* br_file = fopen(target_path_to_br, "rb");
-    if (!br_file) {
-        if (strlen(target) != 40) {
-            fprintf(stderr, "Error: pathspec \"%s\" did not match any file(s) known to meow\n",
-                    target);
-        }
-        strcpy(commit_hash, target);
-    } else {
-        fscanf(br_file, "%40s", commit_hash);
-        fclose(br_file);
-    }
+    get_commit_from_link(commit_hash, NULL, target, p_ctx.work_dir);
 
     char target_tree[41];
     get_tree(commit_hash, target_tree, p_ctx.work_dir);
