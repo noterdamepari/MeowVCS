@@ -94,7 +94,7 @@ void meow_log(int n, char* to, char* from) {
     }
 
     if (!strcmp(commit_hash, "nil")) {
-        printf("No commit history");
+        printf("No commit history\n");
         return;
     }
 

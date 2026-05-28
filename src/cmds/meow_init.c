@@ -10,7 +10,7 @@ char meow_init() {
 
     strcat(def_path, default_dir);
     if (mkdir(def_path, 0777) == -1) {
-        fprintf(stderr, "Error: Repository already exists");
+        fprintf(stderr, "Error: Repository already exists\n");
         exit(EXIT_FAILURE);
     }
 

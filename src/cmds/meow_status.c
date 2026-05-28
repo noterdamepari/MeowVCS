@@ -25,12 +25,12 @@ void meow_status() {
     if (!strncmp("ref: ", buffer, 5)) {
         char* br_name = strchr(buffer, '/');
         if (!br_name) {
-            fprintf(stderr, "HEAD file corruption");
+            fprintf(stderr, "HEAD file corruption\n");
             exit(EXIT_FAILURE);
         }
         br_name = strchr(br_name + 1, '/');
         if (!br_name) {
-            fprintf(stderr, "HEAD file corruption");
+            fprintf(stderr, "HEAD file corruption\n");
             exit(EXIT_FAILURE);
         }
         printf("On branch %s\n\n", br_name + 1);

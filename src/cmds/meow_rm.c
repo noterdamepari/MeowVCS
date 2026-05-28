@@ -15,7 +15,7 @@ static void rm_rec(avlTree** index, char* path, rm_option opt, unsigned int* ent
     make_path_relative(project_dir, path, rel_path);
     struct stat st;
     if (stat(path, &st) == -1) {
-        fprintf(stderr, "Error: file doesn`t exists");
+        fprintf(stderr, "Error: file doesn`t exists\n");
         exit(EXIT_FAILURE);
     }
     if (strcmp(rel_path, ".meow") == 0 || strcmp(rel_path, "./.meow") == 0 ||
@@ -60,7 +60,7 @@ void meow_rm(char* file, rm_option opt) {
     find_project_dir(p_ctx.project_dir, p_ctx.work_dir);
 
     if (is_detached_head(p_ctx.work_dir)) {
-        fprintf(stderr, "Error: You are not on head now");
+        fprintf(stderr, "Error: You are not on head now\n");
         exit(EXIT_FAILURE);
     }
 

@@ -11,7 +11,7 @@
 
 void meow_branch(char* name) {
     if (strlen(name) > BR_NAME_SIZE) {
-        fprintf(stderr, "Error: branch name length exceeds limit");
+        fprintf(stderr, "Error: branch name length exceeds limit\n");
     }
     char work_dir[PATH_MAX];
     char path_to_head[PATH_MAX];
